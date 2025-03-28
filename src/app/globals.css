@@ -1,17 +1,68 @@
+/* @tailwind base; */
+/* @tailwind components;
+@tailwind utilities; */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap');
+
 @import "tailwindcss";
+/* @import "../brand/theme.css"; */
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Base colors */
+  --background: #0a0a0a;
+  --foreground: #ededed;
+  
+  --card-bg: #171717; /* Dark gray for cards */
+  --card-border: #2a2a2a; /* Border color for cards */
+  --sidebar-bg: #0a0a0a; /* Black for sidebar */
+  --sidebar-border: #2a2a2a; /* Border for sidebar */
+  --sidebar-item-hover: #9fa2ab; /* Hover background for sidebar items */
+  --sidebar-item-active-bg: rgba(110, 214, 129, 0.1); /* Active background for sidebar items */
+  
+  /* Topic colors */
+  --topic-devops: #facc15; /* Yellow for DevOps */
+  --topic-localllm: #fca5a5; /* Red for LocalLLM */
+  
+  /* Thread colors */
+  --thread-bg: rgba(22, 101, 52, 0.3); /* Green with opacity for threads */
+  --thread-border: #166534; /* Green border for threads */
+  
+  /* Text colors */
+  --text-primary: #ffffff; /* White text */
+  --text-secondary: #a3a3a3; /* Gray text */
+  --text-muted: #737373; /* Darker gray text */
+
+  --sidebar-hover: #ffffff; /* Or whatever color you want */
+
+
+  --topic-card-bg: #000000;
+  --topic-card-border: #2a2a2a;
 }
 
-@theme inline {
+/* @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
+  
+} */
 
+@theme {
+  --color-brand: #6ED681;
+
+  --color-primary: #ffffff;
+  --color-secondary: #a3a3a3;
+
+  --color-accent: #6ED681;
+
+  --color-sidebar-item-bg: #1a1f2c;
+  --color-sidebar-bg: oklch(0.141 0.005 285.823); /* Black for sidebar */
+  --color-sidebar-border: #2a2a2a; /* Border for sidebar */
+
+  --color-topic-card-bg: #000000;
+  --color-topic-card-border: #2a2a2a;
+
+  
+}
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
@@ -22,5 +73,67 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  /* font-family: Arial, Helvetica, sans-serif; */
+  font-family: 'Inter', sans-serif;
+}
+
+/* Custom classes using our color variables */
+/* .text-brand {
+  color: var(--brand);
+}
+
+.bg-sidebar-item-hover {
+  background-color: var(--sidebar-item-hover);
+}
+
+.bg-sidebar-item-active {
+  background-color: var(--sidebar-item-active-bg);
+} */
+
+/* Keep the existing Tailwind layer */
+@layer base {
+  :root {
+    /* --brand: #6ED681; */
+
+    --brand: 0 73% 73%;
+    --background: 215 30% 8%;
+    --foreground: 0 0% 100%;
+
+    --card: 215 25% 12%;
+    --card-foreground: 0 0% 100%;
+
+    --popover: 215 25% 12%;
+    --popover-foreground: 0 0% 100%;
+
+    --primary: 142 70% 73%;
+    --primary-foreground: 215 30% 8%;
+
+    --secondary: 215 25% 15%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 215 25% 18%;
+    --muted-foreground: 215 20% 65%;
+
+    --accent: 215 25% 20%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 63% 31%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 215 25% 20%;
+    --input: 215 25% 20%;
+    --ring: 142 70% 73%;
+
+    --trend-up: 142 70% 45%;
+    --trend-down: 0 70% 60%;
+
+    --radius: 0.5rem;
+  }
+}
+
+.bg-grid-pattern {
+  background-image: 
+    linear-gradient(to right, rgba(255, 255, 255, 0.1) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+  background-size: 20px 20px;
 }
