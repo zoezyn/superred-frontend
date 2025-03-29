@@ -1,3 +1,10 @@
+"use client"
+
+import { supabase } from "@/lib/supabase";
+
+const { data: { session }, error: authError } = await supabase.auth.getSession();
+console.log("saved-page-session1: ", { data: session, error: authError });
+
 export default function Saved() {
   return (
     <div className="container mx-auto px-6 py-8">

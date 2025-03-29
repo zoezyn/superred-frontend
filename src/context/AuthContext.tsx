@@ -7,13 +7,13 @@ import { supabase } from '@/lib/supabase'
 type AuthContextType = {
   user: User | null
   profile: any | null
-  signOut: () => Promise<void>
+//   signOut: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
   profile: null,
-  signOut: async () => {}
+//   signOut: async () => {}
 })
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -28,11 +28,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Function to fetch user profile
   const fetchUserProfile = async (userId: string) => {
     try {
+      console.log("AuthContext-fetching profile1")
       const { data, error } = await supabase
         .from('user_profiles')
         .select('*')
         .eq('id', userId)
         .single()
+      console.log("AuthContext-fetching profile2")
       
       if (error) {
         console.error('Error fetching profile:', error)
@@ -47,15 +49,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
   
   useEffect(() => {
-    if (!isClient) return
-    
+    if (!isClient) return    
     
     // Initial fetch
     const fetchUser = async () => {
+
       try {
+        console.log("AuthContext useEffect 1");
         
         const { data: { session } } = await supabase.auth.getSession()
-        console.log("AuthContext useEffect running");
+        console.log("AuthContext useEffect 2");
         const currentUser = session?.user || null
         
         console.log("Initial auth check - User:", currentUser?.id)
@@ -84,6 +87,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         console.log("AuthContext-currentUser: ", currentUser)
         
         if (currentUser) {
+          console.log("AuthContext-getting profile")
           const profileData = await fetchUserProfile(currentUser.id)
           console.log("Profile after auth change:", profileData)
           setProfile(profileData)
@@ -113,7 +117,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   console.log("AuthContext render - Profile:", profile?.first_name)
   
   return (
-    <AuthContext.Provider value={{ user, profile, signOut }}>
+    <AuthContext.Provider value={{ user, profile }}>
       {children}
     </AuthContext.Provider>
   )

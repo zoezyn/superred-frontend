@@ -5,6 +5,8 @@ import { useParams } from "next/navigation"
 import Link from "next/link"
 import { ArrowLeft } from "lucide-react"
 import { supabase } from "@/lib/supabase"
+import { useAuth } from '@/context/AuthContext'
+
 
 interface Topic {
   id: string
@@ -20,15 +22,16 @@ export default function TopicPage() {
   const topicId = params?.id as string
   const [topic, setTopic] = useState<Topic | null>(null)
   const [loading, setLoading] = useState(true)
-  const [user, setUser] = useState<any>(null)
+  // const [user, setUser] = useState<any>(null)
+  const { user } = useAuth()
   const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({})
 
   // Check for user session
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user || null)
-    })
-  }, [])
+  // useEffect(() => {
+  //   supabase.auth.getSession().then(({ data: { session } }) => {
+  //     setUser(session?.user || null)
+  //   })
+  // }, [])
 
   // Load topic data
   useEffect(() => {

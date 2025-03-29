@@ -6,6 +6,7 @@ import { RedditAnalysisRequest, RedditAnalysisResponse } from "@/types/reddit"
 import { supabase } from "@/lib/supabase"
 import { AuthModal, UserProfile } from "@/components/auth"
 import { User } from "@supabase/supabase-js"
+import { useAuth } from "@/context/AuthContext"
 
 // Default topics data - only used if no user is logged in
 const defaultTopics = [
@@ -25,23 +26,26 @@ export default function Home() {
   const [subredditName, setSubredditName] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
-  const [user, setUser] = useState<User | null>(null)
+  // const [user, setUser] = useState<User | null>(null)
   const [subreddit, setSubreddit] = useState<string[]>([])
   // Check for existing session on load
-  useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        setUser(session?.user || null)
-      }
-    )
+  const { user, profile } = useAuth()
+
+  console.log("page-user: ", user)
+  // useEffect(() => {
+  //   const { data: { subscription } } = supabase.auth.onAuthStateChange(
+  //     (_event, session) => {
+  //       setUser(session?.user || null)
+  //     }
+  //   )
     
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user || null)
-    })
+  //   // Get initial session
+  //   supabase.auth.getSession().then(({ data: { session } }) => {
+  //     setUser(session?.user || null)
+  //   })
     
-    return () => subscription.unsubscribe()
-  }, [])
+  //   return () => subscription.unsubscribe()
+  // }, [])
   
   // Load topics from Supabase when user changes
   useEffect(() => {
@@ -199,8 +203,8 @@ export default function Home() {
     setIsAuthModalOpen(false)
     
     // Get the current user
-    const { data: { user } } = await supabase.auth.getUser()
-    setUser(user)
+    // const { data: { user } } = await supabase.auth.getUser()
+    // setUser(user)
     
     // Check if user has a profile, if not (e.g., Google sign-in) redirect to complete profile
     if (user) {
