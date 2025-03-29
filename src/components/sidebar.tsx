@@ -1,18 +1,76 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { LayoutDashboard, Search, User, Settings, HelpCircle, Bookmark, RedoDotIcon as RedditIcon } from "lucide-react"
+import { LayoutDashboard, Bookmark, User as LucideUser } from "lucide-react"
+import { supabase } from "@/lib/supabase"
+import { User } from "@supabase/supabase-js"
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const [user, setUser] = useState<User | null>(null)
+  const [profile, setProfile] = useState<any>(null)
+  const [isClient, setIsClient] = useState(false)
+  
+  // Set isClient to true when component mounts (client-side only)
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
+  
+  useEffect(() => {
+    if (!isClient) return;
+    
+    // Get current user
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (_event, session) => {
+        const currentUser = session?.user || null
+        setUser(currentUser)
+        
+        if (currentUser) {
+          // Fetch user profile
+          const { data } = await supabase
+            .from('user_profiles')
+            .select('*')
+            .eq('id', currentUser.id)
+            .single()
+          
+          setProfile(data)
+        }
+      }
+    )
+    
+    // Initial fetch
+    const fetchUser = async () => {
+      const { data: { session } } = await supabase.auth.getSession()
+      const currentUser = session?.user || null
+      setUser(currentUser)
+      
+      if (currentUser) {
+        // Fetch user profile
+        const { data } = await supabase
+          .from('user_profiles')
+          .select('*')
+          .eq('id', currentUser.id)
+          .single()
+        
+        setProfile(data)
+      }
+    }
+    
+    fetchUser()
+    
+    return () => {
+      subscription.unsubscribe()
+    }
+  }, [isClient])
   
   const mainNavItems = [
     { path: '/', label: 'Dashboard', icon: <LayoutDashboard size={18} /> },
     { path: '/saved', label: 'Saved', icon: <Bookmark size={18} /> },
-    // { path: '/search', label: 'Search', icon: <Search size={20} /> },
-    { path: '/account', label: 'Account', icon: <User size={18} /> },
+    { path: '/account', label: 'Account', icon: <LucideUser size={18} /> },
   ];
+  
 
   return (
     <div className="w-[192px] h-full border-r flex flex-col bg-sidebar-bg border-sidebar-border">
@@ -39,7 +97,6 @@ export default function Sidebar() {
                       ? 'text-accent  bg-sidebar-item-bg' 
                       : 'text-secondary hover:bg-sidebar-item-bg'
                   }`}
-
                 >
                   <span className="mr-3">
                     {item.icon}
@@ -53,14 +110,27 @@ export default function Sidebar() {
       </nav>
       
       <div className="p-4 border-t border-sidebar-border">
-        <div className="flex items-center">
-          <div className="w-10 h-10 rounded-full flex items-center justify-center text-black font-medium bg-accent">
-            ZY
+        {isClient && user && profile ? (
+          <div className="flex items-center">
+            <div className="w-8 h-8 rounded-full bg-brand flex items-center justify-center text-black font-medium mr-3">
+              {profile.first_name.charAt(0)}{profile.last_name.charAt(0)}
+            </div>
+            <div>
+              <p className="text-sm font-medium">{profile.first_name} {profile.last_name}</p>
+              <p className="text-xs text-gray-400">{profile.career}</p>
+            </div>
           </div>
-          <div className="ml-3">
-            <p className="text-sm font-medium text-primary">Zoe Yan</p>
+        ) : (
+          <div className="flex items-center">
+            <div className="w-8 h-8 rounded-full bg-accent flex items-center justify-center text-white font-medium mr-3">
+              ZY
+            </div>
+            <div>
+              <p className="text-sm font-medium">Name</p>
+              <p className="text-xs text-gray-400">Not logged in</p>
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   )
