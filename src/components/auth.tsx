@@ -62,7 +62,7 @@ export function AuthModal({
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: window.location.origin,
+          redirectTo: `${window.location.origin}/complete-profile`,
         }
       })
       
@@ -106,7 +106,7 @@ export function AuthModal({
           
           <div className="mb-6">
             <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-2">
-              Password
+              {isSignUp ? 'Create Password' : 'Password'}
             </label>
             <input
               type="password"
@@ -121,22 +121,22 @@ export function AuthModal({
           
           {error && <p className="mb-4 text-red-400 text-sm">{error}</p>}
           
-          <div className="flex justify-center">
+          <button
+            type="submit"
+            className="w-full px-4 py-2 bg-brand text-black font-medium rounded-md hover:bg-opacity-90 disabled:opacity-50 mb-4"
+            disabled={loading}
+          >
+            {loading ? 'Loading...' : isSignUp ? 'Sign Up' : 'Sign In'}
+          </button>
+          
+          <div className="flex justify-center  mt-4">
             <button
               type="button"
-              
-              className="px-4 py-2 text-zinc-300 mr-2"
-              disabled={loading}
-            >
-              {isSignUp ? 'Already have an account?' : 'Need an account?'}
-            </button>
-            <button
-              type="submit"
               onClick={() => setIsSignUp(!isSignUp)}
-              className="px-4 py-2 text-zinc-300 font-medium underline hover:bg-opacity-90 disabled:opacity-50  hover:text-white "
+              className="text-zinc-300 text-sm hover:text-white transition-colors duration-200 underline"
               disabled={loading}
             >
-              {loading ? 'Loading...' : isSignUp ? 'Sign Up' : 'Sign In'}
+              {isSignUp ? 'Already have an account? Sign In' : 'Need an account? Sign Up'}
             </button>
           </div>
         </form>

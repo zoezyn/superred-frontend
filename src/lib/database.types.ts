@@ -40,6 +40,45 @@ export interface Database {
           created_at?: string
         }
       }
+      user_profiles: {
+        Row: {
+          id: string
+          first_name: string
+          last_name: string
+          date_of_birth: string
+          career: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id: string
+          first_name: string
+          last_name: string
+          date_of_birth: string
+          career: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          first_name?: string
+          last_name?: string
+          date_of_birth?: string
+          career?: string
+          created_at?: string
+          updated_at?: string
+        }
+      }
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      [_ in never]: never
+    }
+    Enums: {
+      [_ in never]: never
     }
   }
 } 
+

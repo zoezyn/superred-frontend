@@ -13,7 +13,7 @@ export const sampleColors = [
   { bg: "bg-blue-300", text: "text-black" },
   { bg: "bg-green-300", text: "text-black" },
   { bg: "bg-purple-300", text: "text-black" },
-  { bg: "bg-pink-300", text: "text-black" }
+//   { bg: "bg-pink-300", text: "text-black" }
 ]
 
 // // Default topics data - only used if no saved topics exist

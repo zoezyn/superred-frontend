@@ -195,8 +195,26 @@ export default function Home() {
     await supabase.auth.signOut()
   }
   
-  const handleAuthSuccess = () => {
+  const handleAuthSuccess = async () => {
     setIsAuthModalOpen(false)
+    
+    // Get the current user
+    const { data: { user } } = await supabase.auth.getUser()
+    setUser(user)
+    
+    // Check if user has a profile, if not (e.g., Google sign-in) redirect to complete profile
+    if (user) {
+      const { data: profile } = await supabase
+        .from('user_profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single()
+      
+      if (!profile) {
+        // Redirect to complete profile page
+        window.location.href = '/complete-profile'
+      }
+    }
   }
 
   return (

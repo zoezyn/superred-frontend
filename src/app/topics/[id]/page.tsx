@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import { useParams } from "next/navigation"
 import Link from "next/link"
 import { ArrowLeft } from "lucide-react"
@@ -124,16 +124,17 @@ export default function TopicPage() {
 
       {topic.apiData ? (
         // <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 ">
+        
           <div className="columns-1 lg:columns-md gap-6 space-y-6 ">
           {Object.entries(topic.apiData.categories || {}).map(([categoryName, category]: [string, any]) => (
-            <div key={categoryName} className="bg-brand/55 rounded-lg p-3 pt-6 border border-zinc-800 break-inside-avoid">
-              <p className="text-black text-xl font-bold mb-4 ml-2">{category.category}</p>
+            <div key={categoryName} className="bg-brand/55 rounded-lg p-3 pt-5 border border-zinc-800 break-inside-avoid">
+              <p className="text-black text-lg font-semibold mb-3 ml-2">{category.category}</p>
               <div key={categoryName} className="bg-zinc-900/95 rounded-lg p-6 border border-zinc-800">
                 {/* <h2 className="text-xl font-bold mb-4">{categoryName}</h2> */}
                 
-                <p className= "mb-4 font-semibold">Pain Points: {category.pain_points}</p>
+                <p className= "mb-4 font-medium">Pain Points: {category.pain_points}</p>
                 <div className="flex items-center justify-between mb-2">
-                  <h3 className={`inline-block py-1 px-3 text-white border border-green-200 rounded-md font-semibold`}>
+                  <h3 className={`inline-block py-1 px-3 text-white border border-green-200 rounded-md font-normal`}>
                     Related Posts
                   </h3>
                   <button 
@@ -141,13 +142,17 @@ export default function TopicPage() {
                       const currentExpanded = expandedCategories[categoryName] || false;
                       setExpandedCategories({...expandedCategories, [categoryName]: !currentExpanded});
                     }}
-                    className="text-gray-400 hover:text-white"
+                    className="text-gray-400 hover:text-white text-sm transition-colors duration-200 cursor-pointer"
                   >
                     {expandedCategories[categoryName] ? 'Hide' : 'Show'}
                   </button>
                 </div>
                 
-                {expandedCategories[categoryName] && (
+                <div 
+                  className={`overflow-hidden transition-all duration-400 ease-in-out ${
+                    expandedCategories[categoryName] ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'
+                  }`}
+                >
                   <div className="space-y-4 mt-2">
                     {category.posts && category.posts.map((post: any, index: number) => (
                       <div key={index} className="border-l-2 border-brand pl-4 py-1">
@@ -170,7 +175,7 @@ export default function TopicPage() {
                       </div>
                     ))}
                   </div>
-                )}
+                </div>
               </div>
             </div>
           ))}
