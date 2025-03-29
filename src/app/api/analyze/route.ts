@@ -16,10 +16,10 @@ interface RedditPost {
   num_comments: number;
 }
 
-interface Category {
-  category_info: string;
-  posts: RedditPost[];
-}
+// interface Category {
+//   category_info: string;
+//   posts: RedditPost[];
+// }
 
 // interface RedditAnalysisResponse {
 //   categories: Record<string, Category>;

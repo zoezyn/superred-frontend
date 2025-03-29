@@ -55,11 +55,12 @@
   --color-accent: #6ED681;
 
   --color-sidebar-item-bg: #1a1f2c;
-  --color-sidebar-bg: oklch(0.141 0.005 285.823); /* Black for sidebar */
+  --color-sidebar-bg: oklch(0.141 0.005 285.823); /* zinc-950 */
   --color-sidebar-border: #2a2a2a; /* Border for sidebar */
 
   --color-topic-card-bg: #000000;
   --color-topic-card-border: #2a2a2a;
+  
 
   
 }

@@ -14,7 +14,9 @@ export interface RedditPost {
 }
 
 export interface Category {
-  category_info: string;
+//   category_info: string;
+  category: string;
+  pain_points: string;
   posts: RedditPost[];
 }
 
