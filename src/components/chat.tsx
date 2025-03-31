@@ -17,6 +17,7 @@ export default function Chat() {
   const [loading, setLoading] = useState(false)
   const [isExpanded, setIsExpanded] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const inputRef = useRef<HTMLTextAreaElement>(null)
   // const llm = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
   const llm = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY ?? '');
   const model = llm.getGenerativeModel({ model: "gemini-1.5-flash" });
@@ -28,6 +29,12 @@ export default function Chat() {
   useEffect(() => {
     scrollToBottom()
   }, [messages])
+
+  useEffect(() => {
+    if (!loading && inputRef.current && isExpanded) {
+      inputRef.current.focus()
+    }
+  }, [loading, isExpanded])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -96,7 +103,7 @@ export default function Chat() {
   }
 
   return (
-    <div className={`transition-all duration-300 ${
+    <div className={`transition-all duration-300 flex flex-col  ${
       isExpanded 
         ? 'h-screen w-[350px] bg-zinc-900 border-l border-zinc-800' 
         : 'fixed top-4 right-4 z-50'
@@ -104,7 +111,7 @@ export default function Chat() {
       {isExpanded ? (
         <>
           <div className="flex items-center justify-between p-4 border-b border-zinc-800">
-            <h2 className="text-lg font-semibold">Chat Assistant</h2>
+            <h2 className="text-md font-medium">Chat Assistant</h2>
             <button 
               onClick={() => setIsExpanded(false)}
               className="text-gray-400 hover:text-white"
@@ -113,7 +120,7 @@ export default function Chat() {
             </button>
           </div>
 
-          <div className="flex flex-col h-[calc(100vh-144px)] p-4 overflow-y-auto">
+          <div className="flex flex-col flex-1 p-4 overflow-y-auto">
             {messages.map((message, index) => (
               <div
                 key={index}
@@ -134,18 +141,37 @@ export default function Chat() {
             className=" p-4 bg-zinc-900 border-t border-zinc-800"
           >
             <div className="flex gap-2">
-              <input
+              <textarea
+                ref={inputRef}
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder="Type a message..."
+                rows={2}
+                className="flex-1 p-2 bg-zinc-800 border border-zinc-700 rounded-md text-white
+                          focus:outline-none focus:ring-1 focus:ring-white/40 focus:border-transparent
+                          resize-none min-h-[50px] max-h-[120px] overflow-y-auto"
+                disabled={loading}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSubmit(e);
+                  }
+                }}
+              />
+              {/* <input
                 type="text"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 placeholder="Type a message..."
-                className="flex-1 p-2 bg-zinc-800 border border-zinc-700 rounded-md text-white"
+                className="flex-1 p-2 bg-zinc-800 border border-zinc-700 rounded-md text-white
+                          focus:outline-none focus:ring-1 focus:ring-white/40 focus:border-transparent
+                "
                 disabled={loading}
-              />
+              /> */}
               <button
                 type="submit"
                 disabled={loading}
-                className="p-2 bg-brand text-black rounded-md hover:bg-opacity-90 disabled:opacity-50"
+                className="p-2 text-white rounded-md hover:bg-opacity-90 disabled:opacity-50 cursor-pointer"
               >
                 <Send size={20} />
               </button>
