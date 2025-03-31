@@ -218,12 +218,25 @@ export default function TopicPage() {
         
           <div className="columns-1 lg:columns-md gap-6 space-y-6 ">
           {Object.entries(topic.apiData.categories || {}).map(([categoryName, category]: [string, any]) => (
-            <div key={categoryName} className="bg-brand/55 rounded-lg p-3 pt-5 border border-zinc-800 break-inside-avoid">
-              <p className="text-black text-lg font-semibold mb-3 ml-2">{category.category}</p>
+            <div key={categoryName} className="bg-brand/55 rounded-lg p-2 pt-4 border border-zinc-800 break-inside-avoid">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-black text-md font-semibold ml-2">{category.category}</p>
+                {user && (
+                      <button
+                        onClick={() => handleBookmark(category.category, category.pain_points)}
+                        className="text-zinc-800 hover:text-white transition-colors"
+                      >
+                        <Bookmark
+                          size={20}
+                          className={savedItems[`${category.category}-${category.pain_points}`] ? 'fill-current' : ''}
+                        />
+                      </button>
+                    )}
+              </div>
               <div key={categoryName} className="bg-zinc-900/95 rounded-lg p-6 border border-zinc-800">
                 <div className="flex items-start justify-between">
-                  <p className="mb-4 font-medium">Pain Points: {category.pain_points}</p>
-                  {user && (
+                  <p className="mb-4 text-base">{category.pain_points}</p>
+                  {/* {user && (
                     <button
                       onClick={() => handleBookmark(categoryName, category.pain_points)}
                       className="text-gray-400 hover:text-white transition-colors"
@@ -233,7 +246,7 @@ export default function TopicPage() {
                         className={savedItems[`${categoryName}-${category.pain_points}`] ? 'fill-current' : ''}
                       />
                     </button>
-                  )}
+                  )} */}
                 </div>
                 <div className="flex items-center justify-between mb-2">
                   <h3 className={`inline-block py-1 px-3 text-white border border-green-200 rounded-md font-normal`}>
