@@ -2,8 +2,9 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { Send, X, Maximize2, Minimize2 } from 'lucide-react'
-// import GoogleGenAI from "google-genai";
+import GoogleGenAI from "google-genai";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import QuestionAnswerIcon from '@mui/icons-material/QuestionAnswer';
 
 interface Message {
   role: 'user' | 'assistant'
@@ -95,8 +96,10 @@ export default function Chat() {
   }
 
   return (
-    <div className={`h-screen bg-zinc-900 border-l border-zinc-800 transition-all duration-300 ${
-      isExpanded ? 'w-[350px]' : 'w-[50px]'
+    <div className={`transition-all duration-300 ${
+      isExpanded 
+        ? 'h-screen w-[350px] bg-zinc-900 border-l border-zinc-800' 
+        : 'fixed top-4 right-4 z-50'
     }`}>
       {isExpanded ? (
         <>
@@ -154,7 +157,7 @@ export default function Chat() {
           onClick={() => setIsExpanded(true)}
           className="w-full p-4 text-gray-400 hover:text-white"
         >
-          <Maximize2 size={20} />
+          <QuestionAnswerIcon/>
         </button>
       )}
     </div>
