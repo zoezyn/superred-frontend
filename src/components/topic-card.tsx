@@ -282,7 +282,7 @@ export function TopicCard({
         className=" bg-topic-card-bg/70 rounded-lg overflow-hidden border border-topic-card-border hover:border-secondary transition-colors "
         onMouseLeave={handleMouseLeave}
       >
-        <div className="p-6 flex flex-row h-[200px] justify-between gap-2">
+        <div className="p-4 flex flex-row h-[200px] justify-between gap-2">
           {isAuthenticated && (
             <div className="absolute top-2 right-2 ">
               <button 

@@ -1,20 +1,48 @@
 "use client"
 
-import { useState, useEffect } from "react"
+// import { useState, useEffect } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { LayoutDashboard, Search, LucideUser, Settings, HelpCircle, Bookmark, RedoDotIcon as RedditIcon } from "lucide-react"
 import { supabase } from "@/lib/supabase"
 import { User } from "@supabase/supabase-js"
 import { useAuth } from '@/context/AuthContext'
+import { useEffect, useState } from "react"
 
 export default function Sidebar() {
   const pathname = usePathname();
 //   const [user, setUser] = useState<User | null>(null)
-//   const [profile, setProfile] = useState<any>(null)
-  const { user, profile } = useAuth()
+  const [profile, setProfile] = useState<any>(null)
+  const { user } = useAuth()
 
-  const [isClient, setIsClient] = useState(true)
+  const fetchUserProfile = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .select('*')
+        .eq('id', userId)
+        .single()
+      
+        
+      if (error) {
+        console.error('Error fetching profile:', error)
+        return null
+      }
+      
+      return data
+    } catch (error) {
+      console.error('Exception fetching profile:', error)
+      return null
+    }
+  }
+
+  useEffect(() => {
+    if (user) {
+      fetchUserProfile(user.id).then(data => setProfile(data))
+    }
+  }, [user])
+
+//   const [isClient, setIsClient] = useState(true)
 
 //   const [loading, setLoading] = useState(true)
 
@@ -97,7 +125,7 @@ export default function Sidebar() {
     { path: '/', label: 'Dashboard', icon: <LayoutDashboard size={18} /> },
     { path: '/saved', label: 'Saved', icon: <Bookmark size={18} /> },
     // { path: '/search', label: 'Search', icon: <Search size={20} /> },
-    { path: '/account', label: 'Account', icon: <LucideUser size={18} /> },
+    // { path: '/account', label: 'Account', icon: <LucideUser size={18} /> },
   ];
 
 
@@ -200,24 +228,25 @@ export default function Sidebar() {
       </nav>
 
       <div className="px-4 py-3 border-t border-sidebar-border">
-        <div className="flex items-center">
+        <Link href="/profile" className="block">
+          <div className="flex items-center group cursor-pointer">
             <div className="w-10 h-10 rounded-full flex items-center justify-center text-black font-medium bg-accent">
-                {isLoggedIn && isClient ? <>{profile.first_name[0]}{profile.last_name[0]}</> : ""}
+              {isLoggedIn ? <>{profile.first_name[0]}{profile.last_name[0]}</> : ""}
             </div>
             <div className="ml-3">
-                {/* <p>hi</p> */}
-                {isLoggedIn && isClient ? 
-                
+              {isLoggedIn ? 
                 <div>
-                    <p className="text-sm font-medium">{profile.first_name} {profile.last_name}</p>
-                    <p className="text-xs text-gray-400">{profile.career}</p>
+                  <p className="text-sm font-medium group-hover:text-white transition-colors">
+                    {profile.first_name} {profile.last_name}
+                  </p>
+                  <p className="text-xs text-gray-400">{profile.career}</p>
                 </div>
                 :
                 <p className="text-sm font-medium text-primary">Username</p>
-                
-                }
+              }
             </div>
-        </div>
+          </div>
+        </Link>
       </div>
     </div>
   )

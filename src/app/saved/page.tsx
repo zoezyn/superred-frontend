@@ -1,56 +1,112 @@
 "use client"
 
-import { supabase } from "@/lib/supabase";
+import { useState, useEffect } from "react"
+import { useAuth } from "@/context/AuthContext"
+import { supabase } from "@/lib/supabase"
+import Link from "next/link"
+import { Bookmark } from "lucide-react"
 
-const { data: { session }, error: authError } = await supabase.auth.getSession();
-console.log("saved-page-session1: ", { data: session, error: authError });
+interface SavedItem {
+  id: string
+  topic_id: string
+  category_name: string
+  pain_point: string
+  created_at: string
+}
 
 export default function Saved() {
-  return (
-    <div className="container mx-auto px-6 py-8">
-      <h1 className="text-3xl font-bold mb-8">Saved Items</h1>
+  const { user } = useAuth()
+  const [savedItems, setSavedItems] = useState<SavedItem[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const loadSavedItems = async () => {
+      if (!user) return
       
-      <div className="space-y-4">
-        <div className="bg-gray-900 rounded-lg p-6 border border-gray-800">
-          <div className="flex justify-between items-start">
-            <div>
-              <h2 className="text-xl font-bold">Running LLMs on consumer hardware</h2>
-              <p className="text-gray-400 mt-2">
-                A comprehensive guide to optimizing large language models for running on consumer-grade GPUs and CPUs.
-              </p>
-              <div className="mt-4 flex items-center">
-                <span className="bg-red-300 text-black text-xs font-medium px-2 py-1 rounded">LocalLLM</span>
-                <span className="text-gray-500 text-sm ml-4">Saved 2 days ago</span>
-              </div>
-            </div>
-            <button className="text-gray-500 hover:text-white">
-              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                <path d="M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM16 12a2 2 0 100-4 2 2 0 000 4z" />
-              </svg>
-            </button>
-          </div>
-        </div>
+      try {
+        const { data, error } = await supabase
+          .from('saved_items')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
         
-        <div className="bg-gray-900 rounded-lg p-6 border border-gray-800">
-          <div className="flex justify-between items-start">
-            <div>
-              <h2 className="text-xl font-bold">CI/CD Pipeline Best Practices</h2>
-              <p className="text-gray-400 mt-2">
-                Learn how to set up efficient CI/CD pipelines that improve your development workflow and reduce deployment errors.
-              </p>
-              <div className="mt-4 flex items-center">
-                <span className="bg-yellow-300 text-black text-xs font-medium px-2 py-1 rounded">DevOps</span>
-                <span className="text-gray-500 text-sm ml-4">Saved 1 week ago</span>
-              </div>
-            </div>
-            <button className="text-gray-500 hover:text-white">
-              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                <path d="M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM16 12a2 2 0 100-4 2 2 0 000 4z" />
-              </svg>
-            </button>
-          </div>
+        if (error) throw error
+        
+        setSavedItems(data || [])
+      } catch (error) {
+        console.error('Error loading saved items:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+    
+    loadSavedItems()
+  }, [user])
+
+  const handleUnsave = async (itemId: string) => {
+    try {
+      const { error } = await supabase
+        .from('saved_items')
+        .delete()
+        .eq('id', itemId)
+      
+      if (error) throw error
+      
+      setSavedItems(prev => prev.filter(item => item.id !== itemId))
+    } catch (error) {
+      console.error('Error removing saved item:', error)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="container mx-auto px-6 py-8">
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-brand"></div>
         </div>
       </div>
+    )
+  }
+
+  return (
+    <div className="container mx-auto px-6 py-8">
+      <h1 className="text-2xl font-bold mb-8">Saved Items</h1>
+      
+      {savedItems.length === 0 ? (
+        <div className="text-center text-gray-400 py-12">
+          <Bookmark size={48} className="mx-auto mb-4 opacity-50" />
+          <p>No saved items yet</p>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {savedItems.map((item) => (
+            <div key={item.id} className="bg-zinc-900/95 rounded-lg p-6 border border-zinc-800">
+              <div className="flex justify-between items-start">
+                <div>
+                  <Link 
+                    href={`/topics/${item.topic_id}`}
+                    className="text-xl font-bold hover:text-brand transition-colors"
+                  >
+                    {item.category_name}
+                  </Link>
+                  <p className="text-gray-400 mt-2">
+                    {item.pain_point}
+                  </p>
+                  <div className="mt-4 text-gray-500 text-sm">
+                    Saved {new Date(item.created_at).toLocaleDateString()}
+                  </div>
+                </div>
+                <button
+                  onClick={() => handleUnsave(item.id)}
+                  className="text-gray-400 hover:text-white transition-colors"
+                >
+                  <Bookmark size={20} className="fill-current" />
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
-  );
+  )
 } 

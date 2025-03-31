@@ -29,7 +29,7 @@ export default function Home() {
   // const [user, setUser] = useState<User | null>(null)
   const [subreddit, setSubreddit] = useState<string[]>([])
   // Check for existing session on load
-  const { user, profile } = useAuth()
+  const { user } = useAuth()
 
   console.log("page-user: ", user)
   // useEffect(() => {
@@ -230,7 +230,7 @@ export default function Home() {
         ) : (
           <button 
             onClick={() => setIsAuthModalOpen(true)}
-            className="px-4 py-1 bg-brand text-black font-medium rounded-md"
+            className="px-4 py-1 bg-brand text-black font-medium rounded-md hover:bg-brand/80 transition-colors duration-200 cursor-pointer"
           >
             Sign In
           </button>

@@ -3,9 +3,9 @@
 import { useEffect, useState, useRef } from "react"
 import { useParams } from "next/navigation"
 import Link from "next/link"
-import { ArrowLeft } from "lucide-react"
+import { ArrowLeft, Bookmark } from "lucide-react"
 import { supabase } from "@/lib/supabase"
-import { useAuth } from '@/context/AuthContext'
+// import { useAuth } from '@/context/AuthContext'
 
 
 interface Topic {
@@ -22,69 +22,157 @@ export default function TopicPage() {
   const topicId = params?.id as string
   const [topic, setTopic] = useState<Topic | null>(null)
   const [loading, setLoading] = useState(true)
-  // const [user, setUser] = useState<any>(null)
-  const { user } = useAuth()
+  const [user, setUser] = useState<any>(null)
+  // const { user } = useAuth()
   const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({})
+  const [savedItems, setSavedItems] = useState<Record<string, boolean>>({})
 
   // Check for user session
-  // useEffect(() => {
-  //   supabase.auth.getSession().then(({ data: { session } }) => {
-  //     setUser(session?.user || null)
-  //   })
-  // }, [])
-
-  // Load topic data
   useEffect(() => {
-    const loadTopic = async () => {
-      setLoading(true)
-      
-      try {
-        if (user) {
-          // Fetch from database if user is logged in
-          const { data, error } = await supabase
-            .from('topics')
-            .select('*')
-            .eq('id', topicId)
-            .eq('user_id', user.id)
-            .single()
-          
-          if (error) {
-            console.error('Error fetching topic:', error)
-            setTopic(null)
-          } else if (data) {
-            setTopic({
-              id: data.id,
-              title: data.title,
-              members: data.members,
-              color: data.color,
-              apiData: data.api_data
-            })
-          }
-        } else {
-          // Try to get from localStorage as fallback
-          if (typeof window !== 'undefined') {
-            const savedTopics = localStorage.getItem('topics')
-            if (savedTopics) {
-              try {
-                const topics = JSON.parse(savedTopics)
-                const currentTopic = topics.find((t: Topic) => t.id === topicId)
-                setTopic(currentTopic || null)
-              } catch (e) {
-                console.error('Failed to parse saved topics:', e)
-                setTopic(null)
-              }
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user || null)
+    })
+  }, [])
+
+  const loadTopic = async () => {
+    setLoading(true)
+    
+    try {
+      if (user) {
+        // Fetch from database if user is logged in
+        const { data, error } = await supabase
+          .from('topics')
+          .select('*')
+          .eq('id', topicId)
+          .eq('user_id', user.id)
+          .single()
+        console.log("data#################: ", data)
+        
+        if (error) {
+          console.error('Error fetching topic:', error)
+          setTopic(null)
+        } else if (data) {
+          setTopic({
+            id: data.id,
+            title: data.title,
+            members: data.members,
+            color: data.color,
+            apiData: data.api_data
+          })
+        }
+      } else {
+        // Try to get from localStorage as fallback
+        if (typeof window !== 'undefined') {
+          const savedTopics = localStorage.getItem('topics')
+          console.log("savedTopics: ", savedTopics)
+          if (savedTopics) {
+            try {
+              const topics = JSON.parse(savedTopics)
+              const currentTopic = topics.find((t: Topic) => t.id === topicId)
+              setTopic(currentTopic || null)
+            } catch (e) {
+              console.error('Failed to parse saved topics:', e)
+              setTopic(null)
             }
           }
         }
-      } finally {
-        setLoading(false)
       }
+    } finally {
+      setLoading(false)
+    }
+  }
+  // Load topic data
+  // useEffect(() => {
+
+    
+  //   if (topicId) {
+  //     loadTopic()
+  //   }
+  // }, [topicId, user])
+
+  const checkSavedItems = async () => {
+    if (!user) return
+    
+    try {
+      const { data } = await supabase
+        .from('saved_items')
+        .select('category_name, pain_point')
+        .eq('user_id', user.id)
+        .eq('topic_id', topicId)
+      
+      if (data) {
+        const savedMap: Record<string, boolean> = {}
+        data.forEach(item => {
+          savedMap[`${item.category_name}-${item.pain_point}`] = true
+        })
+        setSavedItems(savedMap)
+      }
+    } catch (error) {
+      console.error('Error checking saved items:', error)
+    }
+  }
+
+  useEffect(() => {
+    const loadData = async () => {
+      setLoading(true)
+      if (topicId) {
+        await loadTopic()
+      }
+      if (user) {
+        await checkSavedItems()
+      }
+      setLoading(false)
     }
     
-    if (topicId) {
-      loadTopic()
-    }
+    loadData()
   }, [topicId, user])
+
+  const handleBookmark = async (categoryName: string, painPoint: string) => {
+    if (!user) return
+    
+    const key = `${categoryName}-${painPoint}`
+    const isCurrentlySaved = savedItems[key]
+    
+    try {
+      if (isCurrentlySaved) {
+        // Remove bookmark
+        const { error } = await supabase
+          .from('saved_items')
+          .delete()
+          .eq('user_id', user.id)
+          .eq('topic_id', topicId)
+          .eq('category_name', categoryName)
+          .eq('pain_point', painPoint)
+        
+        if (error) throw error
+        
+        setSavedItems(prev => {
+          const updated = { ...prev }
+          delete updated[key]
+          return updated
+        })
+      } else {
+        // Add bookmark
+        const { error } = await supabase
+          .from('saved_items')
+          .insert({
+            user_id: user.id,
+            topic_id: topicId,
+            category_name: categoryName,
+            pain_point: painPoint
+          })
+        
+        if (error) throw error
+        
+        setSavedItems(prev => ({
+          ...prev,
+          [key]: true
+        }))
+      }
+    } catch (error) {
+      console.error('Error toggling bookmark:', error)
+    }
+  }
 
   if (loading) {
     return (
@@ -133,9 +221,20 @@ export default function TopicPage() {
             <div key={categoryName} className="bg-brand/55 rounded-lg p-3 pt-5 border border-zinc-800 break-inside-avoid">
               <p className="text-black text-lg font-semibold mb-3 ml-2">{category.category}</p>
               <div key={categoryName} className="bg-zinc-900/95 rounded-lg p-6 border border-zinc-800">
-                {/* <h2 className="text-xl font-bold mb-4">{categoryName}</h2> */}
-                
-                <p className= "mb-4 font-medium">Pain Points: {category.pain_points}</p>
+                <div className="flex items-start justify-between">
+                  <p className="mb-4 font-medium">Pain Points: {category.pain_points}</p>
+                  {user && (
+                    <button
+                      onClick={() => handleBookmark(categoryName, category.pain_points)}
+                      className="text-gray-400 hover:text-white transition-colors"
+                    >
+                      <Bookmark
+                        size={20}
+                        className={savedItems[`${categoryName}-${category.pain_points}`] ? 'fill-current' : ''}
+                      />
+                    </button>
+                  )}
+                </div>
                 <div className="flex items-center justify-between mb-2">
                   <h3 className={`inline-block py-1 px-3 text-white border border-green-200 rounded-md font-normal`}>
                     Related Posts
