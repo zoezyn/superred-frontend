@@ -23,4 +23,23 @@ export interface Category {
 export interface RedditAnalysisResponse {
   categories: Record<string, Category>;
   total_posts: number;
+}
+
+// Subreddit Search API types
+export interface SubredditSearchRequest {
+  query: string;
+  limit?: number;
+}
+
+export interface SubredditInfo {
+  name: string;
+  display_name: string;
+  description?: string;
+  subscribers: number;
+  url: string;
+}
+
+export interface SubredditSearchResponse {
+  subreddits: SubredditInfo[];
+  count: number;
 } 

@@ -1,9 +1,9 @@
 "use client"
 
 import Link from "next/link"
-import { Plus, User, X, Trash2, MoreVertical } from "lucide-react"
+import { Plus, User, X, Trash2, MoreVertical, Search } from "lucide-react"
 import { useState, useEffect } from "react"
-import { RedditAnalysisRequest, RedditAnalysisResponse } from "@/types/reddit"
+import { RedditAnalysisRequest, RedditAnalysisResponse, SubredditInfo, SubredditSearchResponse } from "@/types/reddit"
 
 // Sample colors for new cards
 export const sampleColors = [
@@ -375,13 +375,86 @@ export function AddSubredditModal({
   isLoading: boolean;
   error: string;
 }) {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<SubredditInfo[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchError, setSearchError] = useState("");
+  const [step, setStep] = useState<"search" | "confirm">("search");
+  const [selectedSubreddit, setSelectedSubreddit] = useState<SubredditInfo | null>(null);
+  
+  // Reset modal state when opening/closing
+  useEffect(() => {
+    if (isOpen) {
+      setStep("search");
+      setSearchQuery("");
+      setSearchResults([]);
+      setSelectedSubreddit(null);
+      setSearchError("");
+    }
+  }, [isOpen]);
+  
+  const handleSearch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!searchQuery.trim()) {
+      setSearchError("Please enter a search term");
+      return;
+    }
+    
+    setIsSearching(true);
+    setSearchError("");
+    setSearchResults([]);
+    
+    try {
+      const response = await fetch("/api/search-subreddits", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ query: searchQuery }),
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Error: ${response.status}`);
+      }
+      
+      const data: SubredditSearchResponse = await response.json();
+      setSearchResults(data.subreddits || []);
+      
+      if (data.subreddits.length === 0) {
+        setSearchError("No subreddits found matching your search");
+      }
+    } catch (err) {
+      setSearchError(err instanceof Error ? err.message : "Failed to search subreddits");
+    } finally {
+      setIsSearching(false);
+    }
+  };
+  
+  const handleSelectSubreddit = (subreddit: SubredditInfo) => {
+    setSelectedSubreddit(subreddit);
+    setSubredditName(subreddit.display_name);
+    setStep("confirm");
+  };
+  
+  const handleConfirmSubreddit = (e: React.FormEvent) => {
+    onSubmit(e);
+  };
+  
+  const handleBack = () => {
+    setStep("search");
+    setSelectedSubreddit(null);
+  };
+  
   if (!isOpen) return null;
   
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-zinc-900 rounded-lg p-6 w-full max-w-md">
+      <div className="bg-zinc-900 rounded-lg p-6 w-full max-w-md max-h-[80vh] overflow-auto">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold">Add Subreddit</h2>
+          <h2 className="text-xl font-bold">
+            {step === "search" ? "Search Subreddits" : "Confirm Subreddit"}
+          </h2>
           <button 
             onClick={onClose}
             className="text-gray-400 hover:text-white"
@@ -390,41 +463,104 @@ export function AddSubredditModal({
           </button>
         </div>
         
-        <form onSubmit={onSubmit}>
-          <div className="mb-4">
-            <label htmlFor="subreddit" className="block text-sm font-medium text-gray-300 mb-2">
-              Subreddit Name
-            </label>
-            <input
-              type="text"
-              id="subreddit"
-              value={subredditName}
-              onChange={(e) => setSubredditName(e.target.value)}
-              placeholder="e.g. programming"
-              className="w-full p-2 bg-zinc-800 border border-zinc-700 rounded-md text-white"
-              disabled={isLoading}
-            />
-            {error && <p className="mt-2 text-red-400 text-sm">{error}</p>}
-          </div>
-          
-          <div className="flex justify-end">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 text-gray-300 hover:text-white mr-2"
-              disabled={isLoading}
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="px-4 py-2 bg-brand text-black font-medium rounded-md hover:bg-opacity-90 disabled:opacity-50"
-              disabled={isLoading}
-            >
-              {isLoading ? "Loading..." : "Add"}
-            </button>
-          </div>
-        </form>
+        {step === "search" ? (
+          <>
+            <form onSubmit={handleSearch} className="mb-4">
+              <div className="mb-4">
+                <label htmlFor="subreddit-search" className="block text-sm font-medium text-gray-300 mb-2">
+                  Search for a Subreddit
+                </label>
+                <div className="flex">
+                  <input
+                    type="text"
+                    id="subreddit-search"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="e.g. programming, science, music"
+                    className="flex-1 p-2 bg-zinc-800 border border-zinc-700 rounded-l-md text-white"
+                    disabled={isSearching}
+                  />
+                  <button
+                    type="submit"
+                    className="px-4 py-2 bg-brand text-black font-medium rounded-r-md hover:bg-opacity-90 disabled:opacity-50"
+                    disabled={isSearching}
+                  >
+                    {isSearching ? "Searching..." : "Search"}
+                  </button>
+                </div>
+                {searchError && <p className="mt-2 text-red-400 text-sm">{searchError}</p>}
+              </div>
+            </form>
+            
+            {isSearching ? (
+              <div className="flex justify-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-brand"></div>
+              </div>
+            ) : searchResults.length > 0 ? (
+              <div className="space-y-2 max-h-80 overflow-y-auto">
+                <h3 className="text-sm font-medium text-gray-400 mb-2">Select a subreddit:</h3>
+                {searchResults.map((subreddit) => (
+                  <div 
+                    key={subreddit.name}
+                    onClick={() => handleSelectSubreddit(subreddit)}
+                    className="bg-zinc-800 hover:bg-zinc-700 p-3 rounded-md cursor-pointer transition-colors"
+                  >
+                    <div className="flex justify-between">
+                      <h4 className="font-medium">r/{subreddit.display_name}</h4>
+                      <span className="text-gray-400 text-sm">{subreddit.subscribers.toLocaleString()} members</span>
+                    </div>
+                    {subreddit.description && (
+                      <p className="text-gray-400 text-sm mt-1 line-clamp-2">{subreddit.description}</p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : null}
+            
+            <div className="flex justify-end mt-4">
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-4 py-2 text-gray-300 hover:text-white"
+              >
+                Cancel
+              </button>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="mb-6">
+              {selectedSubreddit && (
+                <div className="bg-zinc-800 p-4 rounded-md">
+                  <h3 className="font-medium text-lg">r/{selectedSubreddit.display_name}</h3>
+                  <p className="text-gray-400 text-sm">{selectedSubreddit.subscribers.toLocaleString()} members</p>
+                  {selectedSubreddit.description && (
+                    <p className="text-gray-400 mt-2">{selectedSubreddit.description}</p>
+                  )}
+                </div>
+              )}
+              {error && <p className="mt-2 text-red-400 text-sm">{error}</p>}
+            </div>
+            
+            <div className="flex justify-between">
+              <button
+                type="button"
+                onClick={handleBack}
+                className="px-4 py-2 text-gray-300 hover:text-white"
+                disabled={isLoading}
+              >
+                Back
+              </button>
+              <button
+                onClick={handleConfirmSubreddit}
+                className="px-4 py-2 bg-brand text-black font-medium rounded-md hover:bg-opacity-90 disabled:opacity-50"
+                disabled={isLoading}
+              >
+                {isLoading ? "Loading..." : "Analyze Subreddit"}
+              </button>
+            </div>
+          </>
+        )}
       </div>
     </div>
   )
