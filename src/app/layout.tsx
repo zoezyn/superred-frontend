@@ -35,7 +35,7 @@ export default function RootLayout({
             <div className="w-full flex flex-1 flex-col">
               <img
                 // src="/background.jpg"
-                src="/bg.svg"
+                src="/bg3.svg"
                 alt="City panorama"
                 className="fixed h-full w-full opacity-30 object-cover"
                 // className="fixed inset-0 h-full w-full object-cover opacity-40 grayscale"

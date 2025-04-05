@@ -7,14 +7,14 @@ import { RedditAnalysisRequest, RedditAnalysisResponse } from '@/types/reddit'
 //   search_limit?: number; // Optional field
 // }
 
-interface RedditPost {
-  subreddit: string;
-  title: string;
-  content: string;
-  url: string;
-  score: number;
-  num_comments: number;
-}
+// interface RedditPost {
+//   subreddit: string;
+//   title: string;
+//   content: string;
+//   url: string;
+//   score: number;
+//   num_comments: number;
+// }
 
 // interface Category {
 //   category_info: string;

@@ -66,8 +66,9 @@ export default function Home() {
             const formattedTopics = data.map(topic => ({
               id: topic.id,
               title: topic.title,
-              members: topic.members,
+              subscribers: topic.subscribers,
               color: topic.color,
+              subreddit_icons: topic.subreddit_icons,
               apiData: topic.api_data
             }))
             
@@ -114,8 +115,25 @@ export default function Home() {
     setError("")
     
     try {
+      // Get the selected subreddits data from the hidden input
+      const selectedSubredditsInput = document.getElementById('selected-subreddit-data') as HTMLInputElement;
+      let selectedSubreddits: { name: string; icon: string; subscribers?: number }[] = [];
+      
+      try {
+        if (selectedSubredditsInput?.value) {
+          selectedSubreddits = JSON.parse(selectedSubredditsInput.value);
+        }
+      } catch (err) {
+        console.error("Error parsing selected subreddits:", err);
+      }
+      
+      // If we have parsed data, use it; otherwise fall back to the single subredditName
+      const subredditNames = selectedSubreddits.length > 0 
+        ? selectedSubreddits.map(sr => sr.name) 
+        : subredditName.split(',').map(name => name.trim());
+      
       const requestData: RedditAnalysisRequest = {
-        subreddits: [subredditName],
+        subreddits: subredditNames,
         search_limit: 20
       }
       
@@ -132,32 +150,74 @@ export default function Home() {
       }
       
       const data: RedditAnalysisResponse = await response.json()
+      console.log("data: ", data)
+      
+      // Get a name and icon for the topic (using first subreddit as primary if multiple)
+      const primarySubredditName = subredditNames[0];
+      // const topicId = primarySubredditName.toLowerCase();
+      
+      // Get icon from either the selected subreddits data or from the API response
+      let subredditIconUrl = null;
+      console.log("subredditIconUrl1: ", subredditIconUrl)
+
+      
+      if (selectedSubreddits.length > 0) {
+        // Get up to 4 icons from the selected subreddits
+        subredditIconUrl = selectedSubreddits
+          .slice(0, 4)
+          .map(sr => sr.icon || ""); // Replace null/undefined with empty string instead of filtering
+      } 
+      // else if (data.categories) {
+      //   // If no selected subreddits with icons, try to extract from API response
+      //   subredditIconUrl = Array.from(new Set(
+      //     Object.values(data.categories)
+      //       .flatMap(category => category.posts)
+      //       .filter(post => post.subreddit_icon !== null)
+      //       .map(post => post.subreddit_icon as string)
+      //       .slice(0, 4)
+      //   ));
+      // }
+      
+      console.log("selectedSubreddits: ", selectedSubreddits)
+      // else if (data.categories[0]?.posts[0]?.subreddit_icon) {
+      //   subredditIconUrl = data.categories[0].posts[0].subreddit_icon;
+      // }
+      
+      console.log("subredditIconUrl: ", subredditIconUrl)
+      
+      // Calculate total subscribers across all selected subreddits
+      const totalSubscribers = selectedSubreddits.reduce((total, sr) => total + (sr.subscribers || 0), 0);
+      
+      // Create topic title based on number of subreddits
+      const topicTitle = subredditNames.length === 1 
+        ? `r/${primarySubredditName}` 
+        : `r/${primarySubredditName} + ${subredditNames.length - 1} more`;
       
       // Create new topic with API data
       const randomColorIndex = Math.floor(Math.random() * sampleColors.length)
       
-      const topicId = subredditName.toLowerCase()
-      
       const newTopic = {
-        id: topicId,
-        title: `r/${subredditName}`,
-        members: `${data.total_posts} Posts`,
+        // id: uuidv4(),
+        title: topicTitle,
+        subscribers: totalSubscribers,
         color: sampleColors[randomColorIndex].bg,
-        subreddit: [subredditName],
-        // textColor: sampleColors[randomColorIndex].text,
+        subreddit: subredditNames,
+        subreddit_icons: subredditIconUrl,
         apiData: data
       }
+      console.log("newTopic: ", newTopic)
       
       // Save to Supabase
       const { error: dbError } = await supabase
         .from('topics')
         .insert({
-          id: topicId,
+          // id: newTopic.id,
           user_id: user.id,
           title: newTopic.title,
-          subreddit: [subredditName],
-          members: newTopic.members,
+          subreddit: subredditNames,
+          subscribers: newTopic.subscribers,
           color: newTopic.color,
+          subreddit_icons: newTopic.subreddit_icons,
           api_data: newTopic.apiData,
           created_at: new Date().toISOString()
         })
@@ -277,3 +337,5 @@ export default function Home() {
     </div>
   )
 }
+
+

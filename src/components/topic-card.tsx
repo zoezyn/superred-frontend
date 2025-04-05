@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { Plus, User, X, Trash2, MoreVertical, Search } from "lucide-react"
 import { useState, useEffect } from "react"
-import { RedditAnalysisRequest, RedditAnalysisResponse, SubredditInfo, SubredditSearchResponse } from "@/types/reddit"
+import { RedditAnalysisRequest, RedditAnalysisResponse, SubredditInfo, SubredditSearchResponse, Category } from "@/types/reddit"
 
 // Sample colors for new cards
 export const sampleColors = [
@@ -243,6 +243,20 @@ export const sampleColors = [
 //   )
 // }
 
+function formatSubscriberCount(count: number): string {
+  if (!count && count !== 0) return "0";
+  
+  if (count >= 1000000) {
+    // Round to nearest million
+    return Math.round(count / 1000000) + 'M';
+  }
+  if (count >= 1000) {
+    // Round to nearest thousand
+    return Math.round(count / 1000) + 'K';
+  }
+  return count.toString();
+}
+
 // Topic Card Component
 export function TopicCard({ 
   topic, 
@@ -276,6 +290,41 @@ export function TopicCard({
     }
   };
 
+  // Extract post icons from apiData if available
+  // const postIcons = topic.apiData?.categories
+  //   ? Array.from(new Set(
+  //       Object.values(topic.apiData.categories as Record<string, Category>)
+  //         .flatMap(category => category.posts)
+  //         .filter(post => post.subreddit_icon !== null && post.subreddit_icon !== "")
+  //         .map(post => post.subreddit_icon as string)
+  //         .slice(0, 4)
+  //     ))
+  //   : [];
+  // console.log("postIcons: ", postIcons)
+
+  // If we have topic icons directly, use them (and filter out empty strings)
+  const displayIcons = Array.isArray(topic.subreddit_icons) 
+    ? topic.subreddit_icons.filter((icon: string) => icon && icon !== "") 
+    : [];
+
+  console.log("Array.isArray(topic.subreddit_icons): ", Array.isArray(topic.subreddit_icons))
+
+  // console.log("subredditIcons: ", subredditIcons)
+  
+  // // Combine both sources of icons, prioritizing direct subreddit icons
+  // const displayIcons = subredditIcons.length > 0 
+  //   ? subredditIcons 
+  //   : postIcons;
+
+  // const displayIcons = subredditIcons
+  console.log("displayIcons: ", displayIcons)
+  console.log("topic.subreddit_icons: ", topic.subreddit_icons)
+  // Determine how many placeholder icons we need (if any)
+  // const placeholdersNeeded = Math.max(0, 4 - displayIcons.length);
+  const maxIcons = 4;
+  const placeholdersNeeded = displayIcons.length === 0 ? maxIcons : 
+                             displayIcons.length < maxIcons ? maxIcons - displayIcons.length : 0;
+  
   return (
     <Link href={`/topics/${topic.id}`} className="block relative group">
       <div 
@@ -306,14 +355,36 @@ export function TopicCard({
             </div>
           )}
           
-          {/* <div className="grid grid-cols-2 auto-cols-fr gap-2 w-1/2"> */}
-          <div className="flex flex-wrap justify-center items-center gap-2  w-1/2">
-          {/* <div className="grid grid-cols-1 sm:grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 gap-2"> */}
-            {/* Use fixed placeholders instead of trying to load images */}
-
-            {[1, 2, 3, 4].map((_, index) => (
+          <div className="flex flex-wrap justify-center items-center gap-2 w-1/2">
+            {/* Display actual subreddit icons if available */}
+            {displayIcons.length > 0 ? (
+              displayIcons.map((iconUrl: string, index: number) => (
+                console.log("iconUrl: ", iconUrl),
+                <div
+                key={`icon-${index}`}
+                className="w-15 h-15 bg-gray-800 rounded-sm flex items-center justify-center overflow-hidden"
+              >
+                <img 
+                  src={iconUrl} 
+                  alt="Subreddit icon" 
+                  className="w-full h-full object-cover opacity-70"
+                  onError={(e) => {
+                    // Replace with placeholder if image fails to load
+                    e.currentTarget.src = "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239CA3AF' stroke-width='2'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpath d='M12 8v8M8 12h8'/%3E%3C/svg%3E";
+                  }}
+                />
+              </div>
+            )) 
+            ) : (
+              <div className="w-15 h-15 bg-gray-800 rounded-sm flex items-center justify-center overflow-hidden">
+                <span className="text-gray-400 text-xl">+</span>
+              </div>
+            )}
+            
+            {/* Add placeholders if we don't have enough icons */}
+            {/* {Array.from({ length: placeholdersNeeded }).map((_, index) => (
               <div
-                key={index}
+                key={`placeholder-${index}`}
                 className="w-15 h-15 bg-gray-800 rounded-md flex items-center justify-center overflow-hidden"
               >
                 <div className="w-6 h-6 flex items-center justify-center text-gray-500">
@@ -323,17 +394,27 @@ export function TopicCard({
                   </svg>
                 </div>
               </div>
-            ))}
+            ))} */}
           </div>
-
-          <div className="flex flex-col justify-center">
-            <div className={`${topic.color} text-black text-xl font-bold py-2 px-4 inline-block mb-1`}>
+{/* 
+          <div className={`${topic.color} text-black font-semibold py-2 px-4 inline-block mb-1 text-center overflow-hidden`}>
+                <div className="w-full overflow-hidden text-ellipsis whitespace-nowrap text-[clamp(0.5rem,4vw,1.25rem)]">
+                    {topic.title}
+                </div>
+            </div> */}
+          <div className="flex flex-col justify-center max-w-1/2">
+            <div className={`${topic.color} text-black text-xl font-bold py-2 px-4 inline-block mb-1 text-center`}>
                 {topic.title}
+                {/* {Array.isArray(topic.subreddit) && topic.subreddit.length > 1 && (
+                  <span className="absolute  bg-zinc-700 text-white text-xs px-1 rounded-full">
+                    {topic.subreddit.length}
+                  </span>
+                )} */}
             </div>
 
             <div className="text-gray-400 flex items-center mt-2 justify-center">
                 <User className="w-4 h-4 mr-1" />
-                {topic.members}
+                {formatSubscriberCount(topic.subscribers)} subscribers
             </div>
           </div>
           
@@ -377,10 +458,11 @@ export function AddSubredditModal({
 }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<SubredditInfo[]>([]);
+  const [selectedSubreddits, setSelectedSubreddits] = useState<SubredditInfo[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [searchError, setSearchError] = useState("");
   const [step, setStep] = useState<"search" | "confirm">("search");
-  const [selectedSubreddit, setSelectedSubreddit] = useState<SubredditInfo | null>(null);
+  
   
   // Reset modal state when opening/closing
   useEffect(() => {
@@ -388,7 +470,7 @@ export function AddSubredditModal({
       setStep("search");
       setSearchQuery("");
       setSearchResults([]);
-      setSelectedSubreddit(null);
+      setSelectedSubreddits([]);
       setSearchError("");
     }
   }, [isOpen]);
@@ -431,9 +513,31 @@ export function AddSubredditModal({
     }
   };
   
-  const handleSelectSubreddit = (subreddit: SubredditInfo) => {
-    setSelectedSubreddit(subreddit);
-    setSubredditName(subreddit.display_name);
+  const handleToggleSubreddit = (subreddit: SubredditInfo) => {
+    setSelectedSubreddits(prev => {
+      // Check if this subreddit is already selected
+      const isAlreadySelected = prev.some(sr => sr.name === subreddit.name);
+      
+      if (isAlreadySelected) {
+        // Remove it if already selected
+        return prev.filter(sr => sr.name !== subreddit.name);
+      } else {
+        // Add it if not selected
+        return [...prev, subreddit];
+      }
+    });
+  };
+  
+  const handleConfirm = () => {
+    console.log("selectedSubreddits: ", selectedSubreddits)
+    if (selectedSubreddits.length === 0) {
+      setSearchError("Please select at least one subreddit");
+      return;
+    }
+    
+    // Join all selected subreddit names with commas for display
+    const selectedNames = selectedSubreddits.map(sr => sr.display_name).join(", ");
+    setSubredditName(selectedNames);
     setStep("confirm");
   };
   
@@ -443,7 +547,6 @@ export function AddSubredditModal({
   
   const handleBack = () => {
     setStep("search");
-    setSelectedSubreddit(null);
   };
   
   if (!isOpen) return null;
@@ -453,7 +556,7 @@ export function AddSubredditModal({
       <div className="bg-zinc-900 rounded-lg p-6 w-full max-w-md max-h-[80vh] overflow-auto">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-bold">
-            {step === "search" ? "Search Subreddits" : "Confirm Subreddit"}
+            {step === "search" ? "Search Subreddits" : "Confirm Subreddits"}
           </h2>
           <button 
             onClick={onClose}
@@ -468,7 +571,7 @@ export function AddSubredditModal({
             <form onSubmit={handleSearch} className="mb-4">
               <div className="mb-4">
                 <label htmlFor="subreddit-search" className="block text-sm font-medium text-gray-300 mb-2">
-                  Search for a Subreddit
+                  Search for Subreddits
                 </label>
                 <div className="flex">
                   <input
@@ -492,32 +595,87 @@ export function AddSubredditModal({
               </div>
             </form>
             
+            {selectedSubreddits.length > 0 && (
+              <div className="bg-zinc-800 p-3 rounded-md mb-4">
+                <div className="flex justify-between items-center mb-2">
+                  <h3 className="text-sm font-medium text-gray-300">Selected Subreddits:</h3>
+                  <span className="text-sm text-gray-400">{selectedSubreddits.length} selected</span>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {selectedSubreddits.map((subreddit) => (
+                    <div 
+                      key={`selected-${subreddit.name}`}
+                      className="flex items-center bg-zinc-700 text-sm rounded-full px-3 py-1 gap-2"
+                    >
+                      <span>r/{subreddit.display_name}</span>
+                      <button 
+                        onClick={() => handleToggleSubreddit(subreddit)}
+                        className="text-gray-400 hover:text-red-400"
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            
             {isSearching ? (
               <div className="flex justify-center py-8">
                 <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-brand"></div>
               </div>
             ) : searchResults.length > 0 ? (
-              <div className="space-y-2 max-h-80 overflow-y-auto">
-                <h3 className="text-sm font-medium text-gray-400 mb-2">Select a subreddit:</h3>
-                {searchResults.map((subreddit) => (
-                  <div 
-                    key={subreddit.name}
-                    onClick={() => handleSelectSubreddit(subreddit)}
-                    className="bg-zinc-800 hover:bg-zinc-700 p-3 rounded-md cursor-pointer transition-colors"
-                  >
-                    <div className="flex justify-between">
-                      <h4 className="font-medium">r/{subreddit.display_name}</h4>
-                      <span className="text-gray-400 text-sm">{subreddit.subscribers.toLocaleString()} members</span>
+              <div className="space-y-2 max-h-60 overflow-y-auto">
+                <h3 className="text-sm font-medium text-gray-400 mb-2">Select subreddits to analyze:</h3>
+                {searchResults.map((subreddit) => {
+                  console.log("subreddit: ", subreddit)
+                  const isSelected = selectedSubreddits.some(sr => sr.name === subreddit.name);
+                  return (
+                    
+                    <div 
+                      key={subreddit.name}
+                      className={`bg-zinc-800 hover:bg-zinc-700 p-3 rounded-md cursor-pointer transition-colors ${isSelected ? 'border border-brand' : ''}`}
+                      onClick={() => handleToggleSubreddit(subreddit)}
+                    >
+                      <div className="flex justify-between items-center">
+                        
+                        <div className="flex items-center gap-2">
+                          <input 
+                            type="checkbox"
+                            checked={isSelected}
+                            readOnly
+                            className="h-4 w-4 rounded accent-brand"
+                          />
+                          
+                          {subreddit.subreddit_icon ? (
+                            console.log("subreddit.subreddit_icon: ", subreddit.subreddit_icon),
+                            <img 
+                              src={subreddit.subreddit_icon} 
+                              alt={`r/${subreddit.display_name} icon`} 
+                              className="w-8 h-8 rounded-full object-cover"
+                              onError={(e) => {
+                                e.currentTarget.src = "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239CA3AF' stroke-width='2'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpath d='M12 8v8M8 12h8'/%3E%3C/svg%3E";
+                              }}
+                            />
+                          ) : (
+                            <div className="w-8 h-8 bg-gray-700 rounded-full flex items-center justify-center">
+                              <span className="text-sm font-bold text-white">r/</span>
+                            </div>
+                          )}
+                          <h4 className="font-medium">r/{subreddit.display_name}</h4>
+                        </div>
+                        <span className="text-gray-400 text-sm">{subreddit.subscribers.toLocaleString()} members</span>
+                      </div>
+                      {subreddit.description && (
+                        <p className="text-gray-400 text-sm mt-1 line-clamp-2 ml-10">{subreddit.description}</p>
+                      )}
                     </div>
-                    {subreddit.description && (
-                      <p className="text-gray-400 text-sm mt-1 line-clamp-2">{subreddit.description}</p>
-                    )}
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             ) : null}
             
-            <div className="flex justify-end mt-4">
+            <div className="flex justify-between mt-4">
               <button
                 type="button"
                 onClick={onClose}
@@ -525,20 +683,61 @@ export function AddSubredditModal({
               >
                 Cancel
               </button>
+              {selectedSubreddits.length > 0 && (
+                <button
+                  onClick={handleConfirm}
+                  className="px-4 py-2 bg-brand text-black font-medium rounded-md hover:bg-opacity-90"
+                >
+                  Continue with {selectedSubreddits.length} {selectedSubreddits.length === 1 ? 'subreddit' : 'subreddits'}
+                </button>
+              )}
             </div>
           </>
         ) : (
           <>
             <div className="mb-6">
-              {selectedSubreddit && (
-                <div className="bg-zinc-800 p-4 rounded-md">
-                  <h3 className="font-medium text-lg">r/{selectedSubreddit.display_name}</h3>
-                  <p className="text-gray-400 text-sm">{selectedSubreddit.subscribers.toLocaleString()} members</p>
-                  {selectedSubreddit.description && (
-                    <p className="text-gray-400 mt-2">{selectedSubreddit.description}</p>
-                  )}
+              <div className="bg-zinc-800 p-4 rounded-md">
+                <h3 className="font-medium text-lg mb-3">Selected Subreddits</h3>
+                <div className="space-y-2 max-h-60 overflow-y-auto">
+                  {selectedSubreddits.map((subreddit) => (
+                    <div key={subreddit.name} className="flex items-center gap-3 p-2 bg-zinc-700 rounded-md">
+                      {subreddit.subreddit_icon ? (
+                        <img 
+                          src={subreddit.subreddit_icon} 
+                          alt={`r/${subreddit.display_name} icon`} 
+                          className="w-10 h-10 rounded-full object-cover"
+                          onError={(e) => {
+                            e.currentTarget.src = "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239CA3AF' stroke-width='2'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpath d='M12 8v8M8 12h8'/%3E%3C/svg%3E";
+                          }}
+                        />
+                      ) : (
+                        <div className="w-10 h-10 bg-gray-700 rounded-full flex items-center justify-center">
+                          <span className="text-sm font-bold text-white">r/</span>
+                        </div>
+                      )}
+                      <div>
+                        <h4 className="font-medium">r/{subreddit.display_name}</h4>
+                        <p className="text-gray-400 text-xs">{subreddit.subscribers.toLocaleString()} members</p>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              )}
+                
+                <p className="text-gray-300 mt-4">
+                  You've selected {selectedSubreddits.length} {selectedSubreddits.length === 1 ? 'subreddit' : 'subreddits'} to analyze. This will find common themes and pain points across these communities.
+                </p>
+                
+                {/* Hidden input to store all subreddit data in JSON format */}
+                <input 
+                  type="hidden" 
+                  id="selected-subreddit-data" 
+                  value={JSON.stringify(selectedSubreddits.map(sr => ({
+                    name: sr.display_name,
+                    icon: sr.subreddit_icon || "",
+                    subscribers: sr.subscribers || 0
+                  })))} 
+                />
+              </div>
               {error && <p className="mt-2 text-red-400 text-sm">{error}</p>}
             </div>
             
@@ -556,7 +755,7 @@ export function AddSubredditModal({
                 className="px-4 py-2 bg-brand text-black font-medium rounded-md hover:bg-opacity-90 disabled:opacity-50"
                 disabled={isLoading}
               >
-                {isLoading ? "Loading..." : "Analyze Subreddit"}
+                {isLoading ? "Analyzing..." : "Analyze Subreddits"}
               </button>
             </div>
           </>

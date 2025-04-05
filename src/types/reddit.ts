@@ -6,6 +6,7 @@ export interface RedditAnalysisRequest {
 
 export interface RedditPost {
   subreddit: string;
+  subreddit_icon: string | null;
   title: string;
   content: string;
   url: string;
@@ -37,6 +38,7 @@ export interface SubredditInfo {
   description?: string;
   subscribers: number;
   url: string;
+  subreddit_icon?: string;
 }
 
 export interface SubredditSearchResponse {
