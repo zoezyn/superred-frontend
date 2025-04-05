@@ -190,8 +190,8 @@ export default function Home() {
       
       // Create topic title based on number of subreddits
       const topicTitle = subredditNames.length === 1 
-        ? `r/${primarySubredditName}` 
-        : `r/${primarySubredditName} + ${subredditNames.length - 1} more`;
+        ? primarySubredditName
+        : `${primarySubredditName} + ${subredditNames.length - 1}`;
       
       // Create new topic with API data
       const randomColorIndex = Math.floor(Math.random() * sampleColors.length)
@@ -240,6 +240,19 @@ export default function Home() {
     if (!user) return
     
     try {
+      // First, delete all saved items related to this topic
+      const { error: savedItemsError } = await supabase
+        .from('saved_items')
+        .delete()
+        .eq('topic_id', topicId)
+        .eq('user_id', user.id)
+        
+      if (savedItemsError) {
+        console.error('Error deleting saved items:', savedItemsError)
+        // Continue with topic deletion even if saved item deletion failed
+      }
+      
+      // Then delete the topic
       const { error } = await supabase
         .from('topics')
         .delete()
@@ -252,6 +265,30 @@ export default function Home() {
       setTopics(topics.filter(topic => topic.id !== topicId))
     } catch (error) {
       console.error('Error deleting topic:', error)
+    }
+  }
+  
+  const handleEditTitle = async (topicId: string, newTitle: string) => {
+    if (!user) return
+    
+    try {
+      // Update the topic title in Supabase
+      const { error } = await supabase
+        .from('topics')
+        .update({ title: newTitle })
+        .eq('id', topicId)
+        .eq('user_id', user.id)
+      
+      if (error) throw error
+      
+      // Update local state
+      setTopics(topics.map(topic => 
+        topic.id === topicId 
+          ? { ...topic, title: newTitle } 
+          : topic
+      ))
+    } catch (error) {
+      console.error('Error updating topic title:', error)
     }
   }
   
@@ -307,8 +344,10 @@ export default function Home() {
             <TopicCard 
               key={topic.id} 
               topic={topic} 
+              numSubreddits={topic.subreddit?.length || 1}
               isAuthenticated={!!user}
               onDelete={handleDeleteTopic}
+              onEdit={handleEditTitle}
             />
           ))}
 

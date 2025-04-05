@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { Plus, User, X, Trash2, MoreVertical, Search } from "lucide-react"
+import { Plus, User, X, Trash2, MoreVertical, Search, MessageCircle, Edit } from "lucide-react"
 import { useState, useEffect } from "react"
 import { RedditAnalysisRequest, RedditAnalysisResponse, SubredditInfo, SubredditSearchResponse, Category } from "@/types/reddit"
 
@@ -260,14 +260,21 @@ function formatSubscriberCount(count: number): string {
 // Topic Card Component
 export function TopicCard({ 
   topic, 
+  numSubreddits,
   isAuthenticated, 
-  onDelete 
+  onDelete,
+  onEdit
 }: { 
   topic: any; 
+  numSubreddits: number;
   isAuthenticated: boolean;
   onDelete?: (id: string) => void;
+  onEdit?: (id: string, newTitle: string) => void;
 }) {
   const [showMenu, setShowMenu] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editTitle, setEditTitle] = useState("");
 
   const handleMenuToggle = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -275,13 +282,50 @@ export function TopicCard({
     setShowMenu(!showMenu);
   };
 
-  const handleDelete = (e: React.MouseEvent) => {
+  const handleDeleteClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    // Show the confirmation dialog instead of deleting immediately
+    setShowDeleteConfirm(true);
+    setShowMenu(false);
+  };
+
+  const handleEditClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setEditTitle(topic.title);
+    setShowEditModal(true);
+    setShowMenu(false);
+  };
+
+  const handleDeleteConfirm = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     if (onDelete) {
       onDelete(topic.id);
     }
-    setShowMenu(false);
+    setShowDeleteConfirm(false);
+  };
+
+  const handleDeleteCancel = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setShowDeleteConfirm(false);
+  };
+
+  const handleEditConfirm = (e: React.MouseEvent | React.FormEvent | React.KeyboardEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (onEdit && editTitle.trim()) {
+      onEdit(topic.id, editTitle.trim());
+    }
+    setShowEditModal(false);
+  };
+
+  const handleEditCancel = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setShowEditModal(false);
   };
 
   const handleMouseLeave = () => {
@@ -324,14 +368,16 @@ export function TopicCard({
   const maxIcons = 4;
   const placeholdersNeeded = displayIcons.length === 0 ? maxIcons : 
                              displayIcons.length < maxIcons ? maxIcons - displayIcons.length : 0;
+
+  console.log("topicsubreddit111: ", topic)
   
   return (
     <Link href={`/topics/${topic.id}`} className="block relative group">
       <div 
-        className=" bg-topic-card-bg/70 rounded-lg overflow-hidden border border-topic-card-border hover:border-secondary transition-colors "
+        className="h-[150px] bg-topic-card-bg/70 rounded-lg overflow-hidden border border-topic-card-border hover:border-zinc-600 transition-colors "
         onMouseLeave={handleMouseLeave}
       >
-        <div className="p-4 flex flex-row h-[200px] justify-between gap-2">
+        <div className="p-4 flex flex-row justify-between gap-2">
           {isAuthenticated && (
             <div className="absolute top-2 right-2 ">
               <button 
@@ -344,12 +390,115 @@ export function TopicCard({
               {showMenu && (
                 <div className="absolute right-0 mt-1 w-36 rounded-md shadow-lg z-10 overflow-hidden">
                   <button
-                    onClick={handleDelete}
+                    onClick={handleEditClick}
+                    className="w-full px-4 py-2 text-left text-sm text-gray-200 bg-gray-800 hover:bg-gray-700 flex items-center"
+                  >
+                    <Edit size={14} className="mr-2" />
+                    Edit Title
+                  </button>
+                  <button
+                    onClick={handleDeleteClick}
                     className="w-full px-4 py-2 text-left text-sm text-red-400 bg-gray-800 hover:bg-gray-700 flex items-center"
                   >
                     <Trash2 size={14} className="mr-2" />
                     Delete Topic
                   </button>
+                </div>
+              )}
+
+              {/* Delete confirmation dialog */}
+              {showDeleteConfirm && (
+                <div className="absolute right-0 mt-1 w-64 p-3 rounded-md shadow-lg z-20 bg-gray-800">
+                  <p className="text-sm text-white mb-3">
+                    Are you sure you want to delete this topic?
+                  </p>
+                  <div className="flex justify-end gap-2">
+                    <button
+                      onClick={handleDeleteCancel}
+                      className="px-3 py-1 text-xs text-gray-300 bg-gray-700 hover:bg-gray-600 rounded"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleDeleteConfirm}
+                      className="px-3 py-1 text-xs text-white bg-red-500 hover:bg-red-600 rounded"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Edit title modal */}
+              {showEditModal && (
+                <div 
+                  className="absolute right-0 mt-1 w-72 p-3 rounded-md shadow-lg z-20 bg-gray-800"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    return false;
+                  }}
+                >
+                  <h3 className="text-sm font-medium text-white mb-2">Edit Topic Title</h3>
+                  <div onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    return false;
+                  }}>
+                    <input
+                      type="text"
+                      value={editTitle}
+                      onChange={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setEditTitle(e.target.value);
+                      }}
+                      onKeyDown={(e) => {
+                        e.stopPropagation();
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          handleEditConfirm(e);
+                        }
+                      }}
+                      className="w-full p-2 mb-3 bg-gray-700 border border-gray-600 rounded text-white text-sm"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        return false;
+                      }}
+                      autoFocus
+                    />
+                  </div>
+                  <div 
+                    className="flex justify-end gap-2"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                    }}
+                  >
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleEditCancel(e);
+                        return false;
+                      }}
+                      className="px-3 py-1 text-xs text-gray-300 bg-gray-700 hover:bg-gray-600 rounded"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleEditConfirm(e);
+                        return false;
+                      }}
+                      className="px-3 py-1 text-xs text-white bg-brand hover:bg-brand/90 rounded"
+                    >
+                      Save
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
@@ -359,10 +508,9 @@ export function TopicCard({
             {/* Display actual subreddit icons if available */}
             {displayIcons.length > 0 ? (
               displayIcons.map((iconUrl: string, index: number) => (
-                console.log("iconUrl: ", iconUrl),
                 <div
                 key={`icon-${index}`}
-                className="w-15 h-15 bg-gray-800 rounded-sm flex items-center justify-center overflow-hidden"
+                className="w-13 h-13 bg-gray-800 rounded-sm flex items-center justify-center overflow-hidden"
               >
                 <img 
                   src={iconUrl} 
@@ -393,6 +541,7 @@ export function TopicCard({
                     <path d="M12 8V16M8 12H16" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round"/>
                   </svg>
                 </div>
+
               </div>
             ))} */}
           </div>
@@ -402,19 +551,20 @@ export function TopicCard({
                     {topic.title}
                 </div>
             </div> */}
-          <div className="flex flex-col justify-center max-w-1/2">
+          <div className="flex flex-col justify-center w-auto max-w-1/2">
             <div className={`${topic.color} text-black text-xl font-bold py-2 px-4 inline-block mb-1 text-center`}>
                 {topic.title}
-                {/* {Array.isArray(topic.subreddit) && topic.subreddit.length > 1 && (
-                  <span className="absolute  bg-zinc-700 text-white text-xs px-1 rounded-full">
-                    {topic.subreddit.length}
-                  </span>
-                )} */}
             </div>
 
-            <div className="text-gray-400 flex items-center mt-2 justify-center">
-                <User className="w-4 h-4 mr-1" />
-                {formatSubscriberCount(topic.subscribers)} subscribers
+            <div className="text-gray-400 flex flex-col  mt-2 justify-start text-sm">
+                <div className="flex items-center">
+                  <User className="w-4 h-4 mr-1" />
+                  {formatSubscriberCount(topic.subscribers)} 
+                </div>
+                <div className="mt-1 flex items-center">
+                  <MessageCircle className="w-4 h-4 mr-1" />
+                  {numSubreddits} {numSubreddits === 1 ? 'Subreddit' : 'Subreddits'}
+                </div>
             </div>
           </div>
           
@@ -428,7 +578,8 @@ export function TopicCard({
 export function AddTopicCard({ onClick }: { onClick: () => void }) {
   return (
     <div 
-      className="bg-topic-card-bg/70 rounded-lg overflow-hidden border border-gray-800 hover:border-gray-700 transition-colors h-[200px] flex items-center justify-center cursor-pointer"
+      className="h-[150px] bg-topic-card-bg/70 rounded-lg overflow-hidden border border-topic-card-border hover:border-zinc-600 transition-colors flex items-center justify-center cursor-pointer"
+      // className="bg-topic-card-bg/70 rounded-lg overflow-hidden border border-gray-800 hover:border-gray-700 transition-colors h-[200px] flex items-center justify-center cursor-pointer"
       onClick={onClick}
     >
       <button className="w-16 h-16 rounded-full bg-gray-800 hover:bg-gray-700 flex items-center justify-center transition-colors">
@@ -764,4 +915,5 @@ export function AddSubredditModal({
     </div>
   )
 }
+
 
