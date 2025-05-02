@@ -1,12 +1,17 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { TopicCard, AddTopicCard, AddSubredditModal, sampleColors } from "@/components/topic-card"
-import { RedditAnalysisRequest, RedditAnalysisResponse } from "@/types/reddit"
+import { TopicCard, AddTopicCard, AddSubredditModal, ManageSubredditsModal, sampleColors } from "@/components/topic-card"
+import { RedditAnalysisRequest, RedditAnalysisResponse, SubredditInfo as BaseSubredditInfo } from "@/types/reddit"
 import { supabase } from "@/lib/supabase"
 import { AuthModal, UserProfile } from "@/components/auth"
 import { User } from "@supabase/supabase-js"
 import { useAuth } from "@/context/AuthContext"
+
+// Extended SubredditInfo type for our UI needs
+interface SubredditInfo extends BaseSubredditInfo {
+  _toRemove?: boolean;
+}
 
 // Default topics data - only used if no user is logged in
 const defaultTopics = [
@@ -28,6 +33,8 @@ export default function Home() {
   const [error, setError] = useState("")
   // const [user, setUser] = useState<User | null>(null)
   const [subreddit, setSubreddit] = useState<string[]>([])
+  const [isManageSubredditsModalOpen, setIsManageSubredditsModalOpen] = useState(false)
+  const [currentTopicToManage, setCurrentTopicToManage] = useState<any>(null)
   // Check for existing session on load
   const { user } = useAuth()
 
@@ -60,6 +67,8 @@ export default function Home() {
             .order('created_at', { ascending: false })
           
           if (error) throw error
+
+          console.log("datadata: ", data)
           
           if (data) {
             // Transform database format to component format if needed
@@ -69,7 +78,9 @@ export default function Home() {
               subscribers: topic.subscribers,
               color: topic.color,
               subreddit_icons: topic.subreddit_icons,
-              apiData: topic.api_data
+              apiData: topic.api_data,
+              subredditss: topic.subreddit,
+              // numSubreddits: topic.subreddit?.length || 1
             }))
             
             setTopics(formattedTopics)
@@ -134,7 +145,7 @@ export default function Home() {
       
       const requestData: RedditAnalysisRequest = {
         subreddits: subredditNames,
-        search_limit: 20
+        search_limit: 50
       }
       
       const response = await fetch("/api/analyze", {
@@ -191,7 +202,7 @@ export default function Home() {
       // Create topic title based on number of subreddits
       const topicTitle = subredditNames.length === 1 
         ? primarySubredditName
-        : `${primarySubredditName} + ${subredditNames.length - 1}`;
+        : `${primarySubredditName}+${subredditNames.length - 1}`;
       
       // Create new topic with API data
       const randomColorIndex = Math.floor(Math.random() * sampleColors.length)
@@ -318,6 +329,179 @@ export default function Home() {
     }
   }
 
+  // Function to handle opening the manage subreddits modal
+  const handleManageSubreddits = (topicId: string) => {
+    if (!user) {
+      setIsAuthModalOpen(true)
+      return
+    }
+    
+    const topicToManage = topics.find(topic => topic.id === topicId)
+    if (topicToManage) {
+      setCurrentTopicToManage(topicToManage)
+      setIsManageSubredditsModalOpen(true)
+    }
+  }
+  
+  // Function to update a topic's subreddits
+  const handleUpdateTopicSubreddits = async (topicId: string, subredditsToModify: SubredditInfo[]) => {
+    if (!user) return
+    
+    try {
+      setIsLoading(true)
+      
+      // Get the current topic
+      console.log("topicshere: ", topics)
+      console.log("topicId: ", topicId)
+      const currentTopic = topics.find(topic => topic.id === topicId)
+      if (!currentTopic) throw new Error("Topic not found")
+      console.log("currentTopic: ", currentTopic)
+      
+      // Get current subreddits as an array
+      const currentSubreddits = currentTopic.subredditss || []
+      console.log("currentSubreddits: ", currentSubreddits)
+      console.log("subredditsToModify: ", subredditsToModify)
+      
+      // Separate subreddits to add and remove
+      const subredditsToRemove = subredditsToModify
+        .filter(sr => sr._toRemove)
+        .map(sr => sr.display_name)
+
+      console.log("subredditsToRemove: ", subredditsToRemove)
+      
+      const subredditsToAdd = subredditsToModify
+        .filter(sr => !sr._toRemove)
+        .map(sr => sr.display_name)
+
+      console.log("subredditsToAdd: ", subredditsToAdd)
+      
+      // Create the updated subreddit list
+      const updatedSubreddits = currentSubreddits
+        .filter((name: string) => !subredditsToRemove.includes(name))
+        .concat(subredditsToAdd)
+
+      console.log("updatedSubreddits: ", updatedSubreddits)
+      
+      // Extract up to 4 subreddit icons from the selected subreddits
+      const updatedSubredditIcons = subredditsToModify
+        .filter(sr => !sr._toRemove)
+        .map(sr => sr.subreddit_icon || "")
+        .concat(currentTopic.subreddit_icons || [])
+        .filter(icon => icon !== "")
+        .slice(0, 4)
+
+      console.log("updatedSubredditIcons: ", updatedSubredditIcons)
+
+
+      // Get the current subscribers count
+      const currentSubscribers = currentTopic.subscribers || 0;
+
+      // Calculate subscribers from newly added subreddits
+      const newSubscribers = subredditsToModify
+        .filter(sr => !sr._toRemove)
+        .reduce((total, sr) => total + (sr.subscribers || 0), 0);
+      
+      // Calculate subscribers from removed subreddits (if we have that data)
+      const removedSubscribers = subredditsToModify
+        .filter(sr => sr._toRemove)
+        .reduce((total, sr) => total + (sr.subscribers || 0), 0);
+      
+      // Calculate the total subscribers (current + added - removed)
+      const totalSubscribers = currentSubscribers + newSubscribers - removedSubscribers;
+      
+      // // Calculate the total subscribers across all subreddits
+      // const addedSubscribers = subredditsToModify
+      //   .filter(sr => !sr._toRemove)
+      //   .reduce((total, sr) => total + (sr.subscribers || 0), 0)
+
+      // console.log("addedSubscribers: ", addedSubscribers)
+      
+      // Subtract removed subreddits subscribers if known (might not be accurate)
+      // For now, we'll recalculate based on API data
+      
+      // Call the Reddit API to analyze the updated subreddits
+      const requestData: RedditAnalysisRequest = {
+        subreddits: updatedSubreddits,
+        search_limit: 50
+      }
+      console.log("requestData: ", requestData)
+      
+      const response = await fetch("/api/analyze", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(requestData),
+      })
+      
+      if (!response.ok) {
+        throw new Error(`Error: ${response.status}`)
+      }
+      
+      const data: RedditAnalysisResponse = await response.json()
+      
+      // Create a name for the topic based on the number of subreddits
+      const primarySubredditName = updatedSubreddits[0]
+      const topicTitle = updatedSubreddits.length === 1 
+        ? primarySubredditName
+        : `${primarySubredditName}+${updatedSubreddits.length - 1}`
+      
+
+              // Merge the new API data with existing data
+      // const mergedApiData = {
+      //   ...currentTopic.apiData,
+      //   ...data,
+      //   // Merge categories if both exist
+      //   categories: {
+      //     ...(currentTopic.apiData?.categories || {}),
+      //     ...(data.categories || {})
+      //   }
+      // };
+      console.log("title: ", topicTitle)
+      console.log("subreddit: ", updatedSubreddits)
+      // Update the topic in Supabase
+      const { error: dbError } = await supabase
+        .from('topics')
+        .update({
+          // title: topicTitle,
+          subreddit: updatedSubreddits,
+          subreddit_icons: updatedSubredditIcons,
+          subscribers: totalSubscribers, // This is approximate
+          api_data: data,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', topicId)
+        .eq('user_id', user.id)
+      
+      if (dbError) throw dbError
+      
+      // Update local state
+      setTopics(prev => prev.map(topic => {
+        if (topic.id === topicId) {
+          return {
+            ...topic,
+            // title: topicTitle,
+            subreddit: updatedSubreddits,
+            subreddit_icons: updatedSubredditIcons,
+            subscribers: totalSubscribers, // This is approximate
+            apiData: data,
+            subredditss: updatedSubreddits
+          }
+        }
+        return topic
+      }))
+      
+      // Close the modal
+      setIsManageSubredditsModalOpen(false)
+      setCurrentTopicToManage(null)
+    } catch (err) {
+      console.error('Error updating topic subreddits:', err)
+      setError(err instanceof Error ? err.message : "Failed to update subreddits")
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   return (
     <div className="container mx-auto px-10 py-16">
       <div className="flex justify-between items-center mb-8">
@@ -335,7 +519,7 @@ export default function Home() {
       </div>
       
       {isLoading && topics.length === 0 ? (
-        <div className="flex justify-center py-12">
+        <div className="flex justify-center py-12" key="loading-spinner">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-brand"></div>
         </div>
       ) : (
@@ -344,10 +528,11 @@ export default function Home() {
             <TopicCard 
               key={topic.id} 
               topic={topic} 
-              numSubreddits={topic.subreddit?.length || 1}
+              // subredditss={topic.subredditss}
               isAuthenticated={!!user}
               onDelete={handleDeleteTopic}
               onEdit={handleEditTitle}
+              onManageSubreddits={handleManageSubreddits}
             />
           ))}
 
@@ -365,6 +550,18 @@ export default function Home() {
         setSubredditName={setSubredditName}
         isLoading={isLoading}
         error={error}
+      />
+      
+      {/* Modal for managing subreddits */}
+      <ManageSubredditsModal
+        isOpen={isManageSubredditsModalOpen}
+        onClose={() => {
+          setIsManageSubredditsModalOpen(false);
+          setCurrentTopicToManage(null);
+        }}
+        topic={currentTopicToManage}
+        onUpdate={handleUpdateTopicSubreddits}
+        isLoading={isLoading}
       />
       
       {/* Auth Modal */}

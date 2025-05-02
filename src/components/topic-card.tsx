@@ -1,9 +1,14 @@
 "use client"
 
 import Link from "next/link"
-import { Plus, User, X, Trash2, MoreVertical, Search, MessageCircle, Edit } from "lucide-react"
+import { Plus, User, X, Trash2, MoreVertical, Search, MessageCircle, Edit, Settings } from "lucide-react"
 import { useState, useEffect } from "react"
-import { RedditAnalysisRequest, RedditAnalysisResponse, SubredditInfo, SubredditSearchResponse, Category } from "@/types/reddit"
+import { RedditAnalysisRequest, RedditAnalysisResponse, SubredditInfo as BaseSubredditInfo, SubredditSearchResponse, Category } from "@/types/reddit"
+
+// Extended SubredditInfo type for our UI needs
+interface SubredditInfo extends BaseSubredditInfo {
+  _toRemove?: boolean;
+}
 
 // Sample colors for new cards
 export const sampleColors = [
@@ -260,16 +265,18 @@ function formatSubscriberCount(count: number): string {
 // Topic Card Component
 export function TopicCard({ 
   topic, 
-  numSubreddits,
+  // subredditss,
   isAuthenticated, 
   onDelete,
-  onEdit
+  onEdit,
+  onManageSubreddits
 }: { 
   topic: any; 
-  numSubreddits: number;
+  // subredditss: string[];
   isAuthenticated: boolean;
   onDelete?: (id: string) => void;
   onEdit?: (id: string, newTitle: string) => void;
+  onManageSubreddits?: (topicId: string) => void;
 }) {
   const [showMenu, setShowMenu] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -295,6 +302,15 @@ export function TopicCard({
     e.stopPropagation();
     setEditTitle(topic.title);
     setShowEditModal(true);
+    setShowMenu(false);
+  };
+
+  const handleManageSubredditsClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (onManageSubreddits) {
+      onManageSubreddits(topic.id);
+    }
     setShowMenu(false);
   };
 
@@ -388,13 +404,20 @@ export function TopicCard({
               </button>
               
               {showMenu && (
-                <div className="absolute right-0 mt-1 w-36 rounded-md shadow-lg z-10 overflow-hidden">
+                <div className="absolute right-0 mt-1 w-48 rounded-md shadow-lg z-10 overflow-hidden">
                   <button
                     onClick={handleEditClick}
                     className="w-full px-4 py-2 text-left text-sm text-gray-200 bg-gray-800 hover:bg-gray-700 flex items-center"
                   >
                     <Edit size={14} className="mr-2" />
                     Edit Title
+                  </button>
+                  <button
+                    onClick={handleManageSubredditsClick}
+                    className="w-full px-4 py-2 text-left text-sm text-gray-200 bg-gray-800 hover:bg-gray-700 flex items-center"
+                  >
+                    <Settings size={14} className="mr-2" />
+                    Manage Subreddits
                   </button>
                   <button
                     onClick={handleDeleteClick}
@@ -552,7 +575,7 @@ export function TopicCard({
                 </div>
             </div> */}
           <div className="flex flex-col justify-center w-auto max-w-1/2">
-            <div className={`${topic.color} text-black text-xl font-bold py-2 px-4 inline-block mb-1 text-center`}>
+            <div className={`${topic.color} text-black text-xl font-bold py-2 px-4 inline-block mb-1 text-center truncate`}>
                 {topic.title}
             </div>
 
@@ -563,7 +586,14 @@ export function TopicCard({
                 </div>
                 <div className="mt-1 flex items-center">
                   <MessageCircle className="w-4 h-4 mr-1" />
-                  {numSubreddits} {numSubreddits === 1 ? 'Subreddit' : 'Subreddits'}
+                  {topic.subredditss && topic.subredditss.length > 0 ? (
+                    <>
+                      {topic.subredditss.length} {topic.subredditss.length === 1 ? 'Subreddit' : 'Subreddits'}
+                    </>
+                  ) : (
+                    '0 Subreddits'
+                  )}
+                  {/* {subredditss.length} {subredditss.length === 1 ? 'Subreddit' : 'Subreddits'} */}
                 </div>
             </div>
           </div>
@@ -914,6 +944,365 @@ export function AddSubredditModal({
       </div>
     </div>
   )
+}
+
+// Manage Subreddits Modal Component
+export function ManageSubredditsModal({ 
+  isOpen, 
+  onClose, 
+  topic,
+  onUpdate,
+  isLoading
+}: { 
+  isOpen: boolean;
+  onClose: () => void;
+  topic: any;
+  onUpdate: (topicId: string, selectedSubreddits: SubredditInfo[]) => Promise<void>;
+  isLoading: boolean;
+}) {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<SubredditInfo[]>([]);
+  const [selectedSubreddits, setSelectedSubreddits] = useState<SubredditInfo[]>([]);
+  const [existingSubreddits, setExistingSubreddits] = useState<string[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchError, setSearchError] = useState("");
+  const [step, setStep] = useState<"manage" | "confirm">("manage");
+  
+  // Initialize existing subreddits and selected subreddits when the modal opens
+  useEffect(() => {
+    if (isOpen && topic) {
+      // Get existing subreddits from the topic
+      console.log("topiccc: ", topic)
+      const currentSubreddits = topic.subredditss || [];
+      setExistingSubreddits(currentSubreddits);
+      console.log("existingSubredditss: ", existingSubreddits)
+      
+      // Reset other state
+      setSelectedSubreddits([]);
+      setSearchResults([]);
+      setSearchQuery("");
+      setSearchError("");
+      setStep("manage");
+    }
+  }, [isOpen, topic]);
+  
+  const handleSearch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!searchQuery.trim()) {
+      setSearchError("Please enter a search term");
+      return;
+    }
+    
+    setIsSearching(true);
+    setSearchError("");
+    setSearchResults([]);
+    
+    try {
+      const response = await fetch("/api/search-subreddits", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ query: searchQuery }),
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Error: ${response.status}`);
+      }
+      
+      const data: SubredditSearchResponse = await response.json();
+      setSearchResults(data.subreddits || []);
+      
+      if (data.subreddits.length === 0) {
+        setSearchError("No subreddits found matching your search");
+      }
+    } catch (err) {
+      setSearchError(err instanceof Error ? err.message : "Failed to search subreddits");
+    } finally {
+      setIsSearching(false);
+    }
+  };
+  
+  const handleToggleSubreddit = (subreddit: SubredditInfo) => {
+    setSelectedSubreddits(prev => {
+      // Check if this subreddit is already selected
+      const isAlreadySelected = prev.some(sr => sr.name === subreddit.name);
+      
+      if (isAlreadySelected) {
+        // Remove it if already selected
+        return prev.filter(sr => sr.name !== subreddit.name);
+      } else {
+        // Add it if not selected
+        return [...prev, subreddit];
+      }
+    });
+  };
+  
+  const isSubredditInExisting = (name: string): boolean => {
+    return existingSubreddits.some(sr => sr.toLowerCase() === name.toLowerCase());
+  };
+  
+  const handleConfirm = () => {
+    if (selectedSubreddits.length === 0) {
+      setSearchError("Please select at least one subreddit to add");
+      return;
+    }
+    
+    setStep("confirm");
+  };
+  
+  const handleUpdateSubreddits = async () => {
+    if (topic && selectedSubreddits.length > 0) {
+      await onUpdate(topic.id, selectedSubreddits);
+    }
+  };
+  
+  const handleRemoveExistingSubreddit = (subredditName: string) => {
+    // Cannot remove the last subreddit
+    if (existingSubreddits.length <= 1) {
+      setSearchError("You must keep at least one subreddit in the topic");
+      return;
+    }
+    
+    setExistingSubreddits(prev => prev.filter(name => name !== subredditName));
+    
+    // Also add it to selected subreddits to ensure it gets removed when updating
+    const subredditToRemove = {
+      name: subredditName, 
+      display_name: subredditName,
+      subscribers: 0,
+      url: `https://www.reddit.com/r/${subredditName}`
+    };
+    
+    // Mark somehow that this is to be removed
+    setSelectedSubreddits(prev => [...prev, { ...subredditToRemove, _toRemove: true }]);
+  };
+  
+  if (!isOpen) return null;
+  
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+      <div className="bg-zinc-900 rounded-lg p-6 w-full max-w-md max-h-[80vh] overflow-auto">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-bold">
+            {step === "manage" ? "Manage Subreddits" : "Confirm Changes"}
+          </h2>
+          <button 
+            onClick={onClose}
+            className="text-gray-400 hover:text-white"
+          >
+            <X size={20} />
+          </button>
+        </div>
+        
+        {step === "manage" ? (
+          <>
+            {/* Current subreddits section */}
+            <div className="mb-6">
+              <h3 className="text-sm font-medium text-gray-300 mb-2">Current Subreddits</h3>
+              <div className="bg-zinc-800 p-3 rounded-md">
+                {existingSubreddits.map((name) => (
+                  // console.log("nameee: ", name),
+                  <div key={name} className="flex items-center justify-between py-2">
+                    <span className="text-white">r/{name}</span>
+                    {existingSubreddits.length > 1 && (
+                      <button 
+                        onClick={() => handleRemoveExistingSubreddit(name)}
+                        className="text-red-400 hover:text-red-300"
+                      >
+                        <X size={16} />
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+            
+            <div className="border-t border-zinc-700 my-4 pt-4">
+              <h3 className="text-sm font-medium text-gray-300 mb-2">Add New Subreddits</h3>
+              <form onSubmit={handleSearch} className="mb-4">
+                <div className="mb-4">
+                  <div className="flex">
+                    <input
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder="e.g. programming, science, music"
+                      className="flex-1 p-2 bg-zinc-800 border border-zinc-700 rounded-l-md text-white"
+                      disabled={isSearching}
+                    />
+                    <button
+                      type="submit"
+                      className="px-4 py-2 bg-brand text-black font-medium rounded-r-md hover:bg-opacity-90 disabled:opacity-50"
+                      disabled={isSearching}
+                    >
+                      {isSearching ? "Searching..." : "Search"}
+                    </button>
+                  </div>
+                  {searchError && <p className="mt-2 text-red-400 text-sm">{searchError}</p>}
+                </div>
+              </form>
+              
+              {selectedSubreddits.filter(sr => !sr._toRemove).length > 0 && (
+                <div className="bg-zinc-800 p-3 rounded-md mb-4">
+                  <div className="flex justify-between items-center mb-2">
+                    <h3 className="text-sm font-medium text-gray-300">Selected to Add:</h3>
+                    <span className="text-sm text-gray-400">{selectedSubreddits.filter(sr => !sr._toRemove).length} selected</span>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedSubreddits.filter(sr => !sr._toRemove).map((subreddit) => (
+                      <div 
+                        key={`selected-${subreddit.name}`}
+                        className="flex items-center bg-zinc-700 text-sm rounded-full px-3 py-1 gap-2"
+                      >
+                        <span>r/{subreddit.display_name}</span>
+                        <button 
+                          onClick={() => handleToggleSubreddit(subreddit)}
+                          className="text-gray-400 hover:text-red-400"
+                        >
+                          <X size={14} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {isSearching ? (
+                <div className="flex justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-brand"></div>
+                </div>
+              ) : searchResults.length > 0 ? (
+                <div className="space-y-2 max-h-60 overflow-y-auto">
+                  <h3 className="text-sm font-medium text-gray-400 mb-2">Select subreddits to add:</h3>
+                  {searchResults.map((subreddit) => {
+                    const isSelected = selectedSubreddits.some(sr => sr.name === subreddit.name && !sr._toRemove);
+                    const isAlreadyInTopic = isSubredditInExisting(subreddit.display_name);
+                    
+                    return (
+                      <div 
+                        key={subreddit.name}
+                        className={`bg-zinc-800 p-3 rounded-md ${
+                          isAlreadyInTopic ? 'opacity-50' : 'hover:bg-zinc-700 cursor-pointer'
+                        } transition-colors ${isSelected ? 'border border-brand' : ''}`}
+                        onClick={() => !isAlreadyInTopic && handleToggleSubreddit(subreddit)}
+                      >
+                        <div className="flex justify-between items-center">
+                          <div className="flex items-center gap-2">
+                            {!isAlreadyInTopic && (
+                              <input 
+                                type="checkbox"
+                                checked={isSelected}
+                                readOnly
+                                className="h-4 w-4 rounded accent-brand"
+                              />
+                            )}
+                            
+                            {subreddit.subreddit_icon ? (
+                              <img 
+                                src={subreddit.subreddit_icon} 
+                                alt={`r/${subreddit.display_name} icon`} 
+                                className="w-8 h-8 rounded-full object-cover"
+                                onError={(e) => {
+                                  e.currentTarget.src = "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239CA3AF' stroke-width='2'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpath d='M12 8v8M8 12h8'/%3E%3C/svg%3E";
+                                }}
+                              />
+                            ) : (
+                              <div className="w-8 h-8 bg-gray-700 rounded-full flex items-center justify-center">
+                                <span className="text-sm font-bold text-white">r/</span>
+                              </div>
+                            )}
+                            <h4 className="font-medium">r/{subreddit.display_name}</h4>
+                          </div>
+                          <div className="flex items-center">
+                            {isAlreadyInTopic && (
+                              <span className="text-xs bg-zinc-700 text-gray-300 px-2 py-1 rounded mr-2">Already Added</span>
+                            )}
+                            <span className="text-gray-400 text-sm">{subreddit.subscribers.toLocaleString()} members</span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : null}
+            </div>
+            
+            <div className="flex justify-between mt-4">
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-4 py-2 text-gray-300 hover:text-white"
+              >
+                Cancel
+              </button>
+              {selectedSubreddits.filter(sr => !sr._toRemove).length > 0 && (
+                <button
+                  onClick={handleConfirm}
+                  className="px-4 py-2 bg-brand text-black font-medium rounded-md hover:bg-opacity-90"
+                >
+                  Continue with Changes
+                </button>
+              )}
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="mb-6">
+              <div className="bg-zinc-800 p-4 rounded-md">
+                <h3 className="font-medium text-lg mb-3">Confirm Changes</h3>
+                
+                {existingSubreddits.length < topic.subredditss.length && (
+                  <div className="mb-4">
+                    <h4 className="text-sm font-medium text-red-400 mb-2">Removing:</h4>
+                    <ul className="list-disc list-inside text-gray-300">
+                      {topic.subreddit.filter((sr: string) => !existingSubreddits.includes(sr)).map((sr: string) => (
+                        <li key={`remove-${sr}`} className="text-sm">r/{sr}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                
+                {selectedSubreddits.filter(sr => !sr._toRemove).length > 0 && (
+                  <div>
+                    <h4 className="text-sm font-medium text-green-400 mb-2">Adding:</h4>
+                    <ul className="list-disc list-inside text-gray-300">
+                      {selectedSubreddits.filter(sr => !sr._toRemove).map(sr => (
+                        <li key={`add-${sr.name}`} className="text-sm">r/{sr.display_name} ({sr.subscribers.toLocaleString()} members)</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                
+                <p className="text-gray-300 mt-4">
+                  These changes will update the subreddits in this topic and reanalyze the content.
+                </p>
+              </div>
+            </div>
+            
+            <div className="flex justify-between">
+              <button
+                type="button"
+                onClick={() => setStep("manage")}
+                className="px-4 py-2 text-gray-300 hover:text-white"
+                disabled={isLoading}
+              >
+                Back
+              </button>
+              <button
+                onClick={handleUpdateSubreddits}
+                className="px-4 py-2 bg-brand text-black font-medium rounded-md hover:bg-opacity-90 disabled:opacity-50"
+                disabled={isLoading}
+              >
+                {isLoading ? "Updating..." : "Update Topic"}
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
 }
 
 

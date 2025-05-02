@@ -219,7 +219,7 @@ export default function TopicPage() {
         
           <div className="columns-1 lg:columns-md gap-6 space-y-6 ">
           {Object.entries(topic.apiData.categories || {}).map(([categoryName, category]: [string, any]) => (
-            <div key={categoryName} className="bg-brand/55 rounded-lg p-2 pt-4 border border-zinc-800 break-inside-avoid">
+            <div key={categoryName} className="bg-brand/65 rounded-lg p-2 pt-4 border border-zinc-800 break-inside-avoid">
               <div className="flex items-center justify-between mb-2">
                 <p className="text-black text-md font-semibold ml-2">{category.category}</p>
                 {user && (
@@ -274,10 +274,10 @@ export default function TopicPage() {
                       <div key={index} className="border-l-2 border-brand pl-4 py-1">
                         <h4 className="font-medium">{post.title}</h4>
                         <p className="text-gray-400 text-sm mt-1 line-clamp-2">{post.content}</p>
-                        <div className="flex items-center text-xs text-gray-500 mt-2">
+                        {/* <div className="flex items-center text-xs text-gray-500 mt-2">
                           <span className="mr-3">Score: {post.score}</span>
                           <span>Comments: {post.num_comments}</span>
-                        </div>
+                        </div> */}
                         {post.url && (
                           <a 
                             href={post.url} 
