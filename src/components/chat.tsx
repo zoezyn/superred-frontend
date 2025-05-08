@@ -1,8 +1,7 @@
 "use client"
 
 import { useState, useRef, useEffect } from 'react'
-import { Send, X, Maximize2, Minimize2 } from 'lucide-react'
-import GoogleGenAI from "google-genai";
+import { Send, Minimize2 } from 'lucide-react'
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import QuestionAnswerIcon from '@mui/icons-material/QuestionAnswer';
 

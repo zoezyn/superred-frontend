@@ -5,9 +5,9 @@ import { TopicCard, AddTopicCard, AddSubredditModal, ManageSubredditsModal, samp
 import { RedditAnalysisRequest, RedditAnalysisResponse, SubredditInfo as BaseSubredditInfo } from "@/types/reddit"
 import { supabase } from "@/lib/supabase"
 import { AuthModal, UserProfile } from "@/components/auth"
-import { User } from "@supabase/supabase-js"
+// import { User } from "@supabase/supabase-js"
 import { useAuth } from "@/context/AuthContext"
-
+import { Topic } from "@/types/tables"
 // Extended SubredditInfo type for our UI needs
 interface SubredditInfo extends BaseSubredditInfo {
   _toRemove?: boolean;
@@ -18,23 +18,25 @@ const defaultTopics = [
   {
     id: "localllm",
     title: "LocalLLM",
-    members: "470k Members",
+    subscribers: 470000,
     color: "bg-red-300",
-    // textColor: "text-black",
+    subreddit: ["LocalLLM"],
+    subreddit_icons: ["https://www.redditstatic.com/desktop2x/img/id-cards/icon-reddit-large.png"],
+    apiData: {},
   },
 ]
 
 export default function Home() {
-  const [topics, setTopics] = useState<any[]>([])
+  const [topics, setTopics] = useState<Topic[]>([])
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false)
   const [subredditName, setSubredditName] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
   // const [user, setUser] = useState<User | null>(null)
-  const [subreddit, setSubreddit] = useState<string[]>([])
+  // const [subreddit, setSubreddit] = useState<string[]>([])
   const [isManageSubredditsModalOpen, setIsManageSubredditsModalOpen] = useState(false)
-  const [currentTopicToManage, setCurrentTopicToManage] = useState<any>(null)
+  const [currentTopicToManage, setCurrentTopicToManage] = useState<Topic | null>(null)
   // Check for existing session on load
   const { user } = useAuth()
 

@@ -5,10 +5,11 @@ import { useAuth } from "@/context/AuthContext"
 import { supabase } from "@/lib/supabase"
 import Link from "next/link"
 import { ArrowLeft } from "lucide-react"
+import { UserProfile } from "@/types/tables"
 
 export default function ProfilePage() {
   const { user } = useAuth()
-  const [profile, setProfile] = useState<any>(null)
+  const [profile, setProfile] = useState<UserProfile | null>(null)
   const [loading, setLoading] = useState(true)
   const [isEditing, setIsEditing] = useState(false)
   const [formData, setFormData] = useState({

@@ -3,9 +3,8 @@
 // import { useState, useEffect } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { LayoutDashboard, Search, LucideUser, Settings, HelpCircle, Bookmark, RedoDotIcon as RedditIcon } from "lucide-react"
+import { LayoutDashboard, Bookmark } from "lucide-react"
 import { supabase } from "@/lib/supabase"
-import { User } from "@supabase/supabase-js"
 import { useAuth } from '@/context/AuthContext'
 import { useEffect, useState } from "react"
 
@@ -17,7 +16,7 @@ export default function Sidebar() {
 
   const fetchUserProfile = async (userId: string) => {
     try {
-      const { data: profile, error } = await supabase
+      const { data: profile } = await supabase
         .from('user_profiles')
         .select('*')
         .eq('id', userId)

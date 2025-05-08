@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { supabase } from "@/lib/supabase"
 import Link from "next/link"
+import { User } from "@supabase/supabase-js"
 
 // Career options for the dropdown
 const careerOptions = [
@@ -22,7 +23,7 @@ const careerOptions = [
 
 export default function CompleteProfile() {
   const router = useRouter()
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState("")
@@ -141,9 +142,13 @@ export default function CompleteProfile() {
       
       // Redirect immediately instead of waiting
       router.push("/")
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error saving profile:", error)
-      setError(error.message || "Failed to save profile")
+      if (error instanceof Error) {
+        setError(error.message || "Failed to save profile")
+      } else {
+        setError("An unknown error occurred")
+      }
       setSubmitting(false)
     }
   }

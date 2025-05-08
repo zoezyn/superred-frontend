@@ -23,7 +23,7 @@ export default function LocalLLMTopic() {
               <div>
                 <h2 className="text-xl font-bold">Best models for running on consumer hardware</h2>
                 <div className="mt-4 text-gray-300">
-                  <p>I'm looking for recommendations on which LLM models work best on consumer hardware. I have an RTX 3080 with 10GB VRAM and would like to run something comparable to GPT-3.5 locally. Any suggestions?</p>
+                  <p>I am looking for recommendations on which LLM models work best on consumer hardware. I have an RTX 3080 with 10GB VRAM and would like to run something comparable to GPT-3.5 locally. Any suggestions?</p>
                 </div>
               </div>
               <button className="text-gray-400 hover:text-white">
@@ -39,7 +39,7 @@ export default function LocalLLMTopic() {
               <div>
                 <h2 className="text-xl font-bold">Optimizing inference speed with llama.cpp</h2>
                 <div className="mt-4 text-gray-300">
-                  <p>I've been experimenting with different quantization methods in llama.cpp and wanted to share my findings on optimizing for speed vs. quality. Here's what I've learned so far...</p>
+                  <p>I have been experimenting with different quantization methods in llama.cpp and wanted to share my findings on optimizing for speed vs. quality. Here is what I have learned so far...</p>
                 </div>
               </div>
               <button className="text-gray-400 hover:text-white">
