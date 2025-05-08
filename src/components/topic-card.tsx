@@ -12,7 +12,7 @@ interface SubredditInfo extends BaseSubredditInfo {
 
 // Sample colors for new cards
 export const sampleColors = [
-  { bg: "bg-brand", text: "text-black" },
+  // { bg: "bg-brand", text: "text-black" },
   { bg: "bg-yellow-300", text: "text-black" },
   { bg: "bg-red-300", text: "text-black" },
   { bg: "bg-blue-300", text: "text-black" },
@@ -586,13 +586,20 @@ export function TopicCard({
                 </div>
                 <div className="mt-1 flex items-center">
                   <MessageCircle className="w-4 h-4 mr-1" />
-                  {topic.subredditss && topic.subredditss.length > 0 ? (
+                  {/* <>{topic.subreddit.length} Subreddit </> */}
+                  {topic.subreddit ? (
+                    <>{topic.subreddit.length} {topic.subreddit.length === 1 ? 'Subreddit' : 'Subreddits'}</>
+                  ) : (
+                    '0 Subreddits'
+                  )}
+                  
+                  {/* {topic.subredditss && topic.subredditss.length > 0 ? (
                     <>
                       {topic.subredditss.length} {topic.subredditss.length === 1 ? 'Subreddit' : 'Subreddits'}
                     </>
                   ) : (
                     '0 Subreddits'
-                  )}
+                  )} */}
                   {/* {subredditss.length} {subredditss.length === 1 ? 'Subreddit' : 'Subreddits'} */}
                 </div>
             </div>
@@ -973,7 +980,7 @@ export function ManageSubredditsModal({
     if (isOpen && topic) {
       // Get existing subreddits from the topic
       console.log("topiccc: ", topic)
-      const currentSubreddits = topic.subredditss || [];
+      const currentSubreddits = topic.subreddit || [];
       setExistingSubreddits(currentSubreddits);
       console.log("existingSubredditss: ", existingSubreddits)
       
@@ -1253,7 +1260,7 @@ export function ManageSubredditsModal({
               <div className="bg-zinc-800 p-4 rounded-md">
                 <h3 className="font-medium text-lg mb-3">Confirm Changes</h3>
                 
-                {existingSubreddits.length < topic.subredditss.length && (
+                {existingSubreddits.length < topic.subreddit.length && (
                   <div className="mb-4">
                     <h4 className="text-sm font-medium text-red-400 mb-2">Removing:</h4>
                     <ul className="list-disc list-inside text-gray-300">

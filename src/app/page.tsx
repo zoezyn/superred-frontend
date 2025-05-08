@@ -79,7 +79,7 @@ export default function Home() {
               color: topic.color,
               subreddit_icons: topic.subreddit_icons,
               apiData: topic.api_data,
-              subredditss: topic.subreddit,
+              subreddit: topic.subreddit,
               // numSubreddits: topic.subreddit?.length || 1
             }))
             
@@ -207,36 +207,48 @@ export default function Home() {
       // Create new topic with API data
       const randomColorIndex = Math.floor(Math.random() * sampleColors.length)
       
-      const newTopic = {
-        // id: uuidv4(),
-        title: topicTitle,
-        subscribers: totalSubscribers,
-        color: sampleColors[randomColorIndex].bg,
-        subreddit: subredditNames,
-        subreddit_icons: subredditIconUrl,
-        apiData: data
-      }
-      console.log("newTopic: ", newTopic)
+      // const newTopic = {
+      //   // id: uuidv4(),
+      //   title: topicTitle,
+      //   subscribers: totalSubscribers,
+      //   color: sampleColors[randomColorIndex].bg,
+      //   subreddit: subredditNames,
+      //   subreddit_icons: subredditIconUrl,
+      //   apiData: data
+      // }
+      // console.log("newTopic: ", newTopic)
       
       // Save to Supabase
-      const { error: dbError } = await supabase
+      const {data: dataNewTopic, error } = await supabase
         .from('topics')
         .insert({
           // id: newTopic.id,
           user_id: user.id,
-          title: newTopic.title,
+          title: topicTitle,
           subreddit: subredditNames,
-          subscribers: newTopic.subscribers,
-          color: newTopic.color,
-          subreddit_icons: newTopic.subreddit_icons,
-          api_data: newTopic.apiData,
+          subscribers: totalSubscribers,
+          color: sampleColors[randomColorIndex].bg,
+          subreddit_icons: subredditIconUrl,
+          api_data: data,
           created_at: new Date().toISOString()
         })
+        .select()
+        .single();
+
+      // const {data2: Any2, error: dbError2} = await supabase
+      //   .from('topics')
+      //   .select('*')
+      //   .eq('id', Any.id)
+      //   .eq('user_id', user.id)
+      //   .single()
+
+      // console.log("Anydatadatadata1: ", data)
+      console.log("dataNewTopic: ", dataNewTopic)
       
-      if (dbError) throw dbError
+      if (error) throw error
       
       // Update local state
-      setTopics([newTopic, ...topics])
+      setTopics([dataNewTopic, ...topics])
       
       setIsModalOpen(false)
       setSubredditName("")
@@ -358,7 +370,7 @@ export default function Home() {
       console.log("currentTopic: ", currentTopic)
       
       // Get current subreddits as an array
-      const currentSubreddits = currentTopic.subredditss || []
+      const currentSubreddits = currentTopic.subreddit || []
       console.log("currentSubreddits: ", currentSubreddits)
       console.log("subredditsToModify: ", subredditsToModify)
       
@@ -485,7 +497,7 @@ export default function Home() {
             subreddit_icons: updatedSubredditIcons,
             subscribers: totalSubscribers, // This is approximate
             apiData: data,
-            subredditss: updatedSubreddits
+            // subredditss: updatedSubreddits
           }
         }
         return topic
