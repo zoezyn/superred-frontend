@@ -22,7 +22,7 @@ const defaultTopics = [
     color: "bg-red-300",
     subreddit: ["LocalLLM"],
     subreddit_icons: ["https://www.redditstatic.com/desktop2x/img/id-cards/icon-reddit-large.png"],
-    apiData: {},
+    apiData: {categories: {}, total_posts: 0},
   },
 ]
 
