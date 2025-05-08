@@ -40,7 +40,7 @@ export async function POST(request: Request) {
 
     console.log("body: ", body)
     // Call your backend API
-    const response = await fetch('http://127.0.0.1:8000/analyze', {
+    const response = await fetch('https://superred-backend-ancient-field-5996.fly.dev/analyze', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

@@ -16,7 +16,7 @@ export async function POST(request: Request) {
     console.log("Search subreddits request:", body);
     
     // Call your backend API
-    const response = await fetch('http://127.0.0.1:8000/search-subreddits', {
+    const response = await fetch('https://superred-backend-ancient-field-5996.fly.dev/search-subreddits', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

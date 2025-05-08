@@ -18,7 +18,7 @@ export default function Chat() {
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
   // const llm = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-  const llm = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY ?? '');
+  const llm = new GoogleGenerativeAI(process.env.GEMINI_API_KEY ?? '');
   const model = llm.getGenerativeModel({ model: "gemini-1.5-flash" });
 
   const scrollToBottom = () => {
