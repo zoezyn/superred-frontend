@@ -6,15 +6,15 @@ import Link from "next/link"
 import { ArrowLeft, Bookmark } from "lucide-react"
 import { supabase } from "@/lib/supabase"
 // import { useAuth } from '@/context/AuthContext'
-
-
+import { RedditPost, Category, RedditAnalysisResponse } from "@/types/reddit"
+import { User } from "@supabase/supabase-js"
 interface Topic {
   id: string
   title: string
   members: string
   color: string
   // textColor: string
-  apiData?: any
+  apiData?: RedditAnalysisResponse
 }
 
 export default function TopicPage() {
@@ -22,7 +22,7 @@ export default function TopicPage() {
   const topicId = params?.id as string
   const [topic, setTopic] = useState<Topic | null>(null)
   const [loading, setLoading] = useState(true)
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState<User | null>(null)
   // const { user } = useAuth()
   const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({})
   const [savedItems, setSavedItems] = useState<Record<string, boolean>>({})
@@ -218,7 +218,7 @@ export default function TopicPage() {
         // <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 ">
         
           <div className="columns-1 lg:columns-md gap-6 space-y-6 ">
-          {Object.entries(topic.apiData.categories || {}).map(([categoryName, category]: [string, any]) => (
+          {Object.entries(topic.apiData.categories || {}).map(([categoryName, category]: [string, Category]) => (
             <div key={categoryName} className="bg-brand/65 rounded-lg p-2 pt-4 border border-zinc-800 break-inside-avoid">
               <div className="flex items-center justify-between mb-2">
                 <p className="text-black text-md font-semibold ml-2">{category.category}</p>
@@ -270,7 +270,7 @@ export default function TopicPage() {
                   }`}
                 >
                   <div className="space-y-4 mt-2">
-                    {category.posts && category.posts.map((post: any, index: number) => (
+                    {category.posts && category.posts.map((post: RedditPost, index: number) => (
                       <div key={index} className="border-l-2 border-brand pl-4 py-1">
                         <h4 className="font-medium">{post.title}</h4>
                         <p className="text-gray-400 text-sm mt-1 line-clamp-2">{post.content}</p>

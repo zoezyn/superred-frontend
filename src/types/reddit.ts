@@ -6,7 +6,7 @@ export interface RedditAnalysisRequest {
 
 export interface RedditPost {
   subreddit: string;
-  subreddit_icon: string | null;
+  // subreddit_icon: string | null;
   title: string;
   content: string;
   url: string;

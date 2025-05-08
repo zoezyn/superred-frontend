@@ -47,8 +47,12 @@ export function AuthModal({
         
         onSuccess()
       }
-    } catch (error: any) {
-      setError(error.message || 'An error occurred')
+    } catch (error) {
+      if (error instanceof Error) {
+        setError(error.message || 'An error occurred')
+      } else {
+        setError('An unknown error occurred')
+      }
     } finally {
       setLoading(false)
     }
@@ -69,8 +73,12 @@ export function AuthModal({
       if (error) throw error
       
       // The redirect will happen automatically
-    } catch (error: any) {
-      setError(error.message || 'An error occurred with Google sign in')
+    } catch (error) {
+      if (error instanceof Error) {
+        setError(error.message || 'An error occurred with Google sign in')
+      } else {
+        setError('An unknown error occurred with Google sign in')
+      }
       setLoading(false)
     }
   }
@@ -162,7 +170,7 @@ export function AuthModal({
   )
 }
 
-export function UserProfile({ user, onSignOut }: { user: any, onSignOut: () => void }) {
+export function UserProfile({ onSignOut }: { onSignOut: () => void }) {
   return (
     <div className="flex items-center">
       {/* <div className="mr-4">
