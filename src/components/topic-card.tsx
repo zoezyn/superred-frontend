@@ -4,7 +4,7 @@ import Link from "next/link"
 import { Plus, User, X, Trash2, MoreVertical, MessageCircle, Edit, Settings } from "lucide-react"
 import { useState, useEffect } from "react"
 import { SubredditInfo as BaseSubredditInfo, SubredditSearchResponse } from "@/types/reddit"
-
+import { Topic } from "@/types/tables"
 // Extended SubredditInfo type for our UI needs
 interface SubredditInfo extends BaseSubredditInfo {
   _toRemove?: boolean;
@@ -45,7 +45,7 @@ export function TopicCard({
   onEdit,
   onManageSubreddits
 }: { 
-  topic: any; 
+  topic: Topic; 
   // subredditss: string[];
   isAuthenticated: boolean;
   onDelete?: (id: string) => void;
@@ -156,8 +156,8 @@ export function TopicCard({
   // Determine how many placeholder icons we need (if any)
   // const placeholdersNeeded = Math.max(0, 4 - displayIcons.length);
   const maxIcons = 4;
-  const placeholdersNeeded = displayIcons.length === 0 ? maxIcons : 
-                             displayIcons.length < maxIcons ? maxIcons - displayIcons.length : 0;
+  // const placeholdersNeeded = displayIcons.length === 0 ? maxIcons : 
+  //                            displayIcons.length < maxIcons ? maxIcons - displayIcons.length : 0;
 
   console.log("topicsubreddit111: ", topic)
   
@@ -736,7 +736,7 @@ export function ManageSubredditsModal({
 }: { 
   isOpen: boolean;
   onClose: () => void;
-  topic: any;
+  topic: Topic;
   onUpdate: (topicId: string, selectedSubreddits: SubredditInfo[]) => Promise<void>;
   isLoading: boolean;
 }) {
