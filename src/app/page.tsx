@@ -14,17 +14,17 @@ interface SubredditInfo extends BaseSubredditInfo {
 }
 
 // Default topics data - only used if no user is logged in
-// const defaultTopics = [
-//   {
-//     id: "localllm",
-//     title: "LocalLLM",
-//     subscribers: 470000,
-//     color: "bg-red-300",
-//     subreddit: ["LocalLLM"],
-//     subreddit_icons: ["https://www.redditstatic.com/desktop2x/img/id-cards/icon-reddit-large.png"],
-//     apiData: {categories: {}, total_posts: 0},
-//   },
-// ]
+const defaultTopics = [
+  {
+    id: "localllm",
+    title: "LocalLLM",
+    subscribers: 470000,
+    color: "bg-red-300",
+    subreddit: ["LocalLLM"],
+    subreddit_icons: ["https://www.redditstatic.com/desktop2x/img/id-cards/icon-reddit-large.png"],
+    apiData: {categories: {}, total_posts: 0},
+  },
+]
 
 export default function Home() {
   const [topics, setTopics] = useState<Topic[]>([])
@@ -94,6 +94,7 @@ export default function Home() {
         }
       } else {
         // Not logged in, use default topics
+        setTopics(defaultTopics)
       }
     }
     
