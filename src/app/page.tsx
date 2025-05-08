@@ -521,7 +521,7 @@ export default function Home() {
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-2xl font-bold">Topics</h1>
         {user ? (
-          <UserProfile user={user} onSignOut={handleSignOut} />
+          <UserProfile onSignOut={handleSignOut} />
         ) : (
           <button 
             onClick={() => setIsAuthModalOpen(true)}
@@ -567,16 +567,18 @@ export default function Home() {
       />
       
       {/* Modal for managing subreddits */}
-      <ManageSubredditsModal
-        isOpen={isManageSubredditsModalOpen}
-        onClose={() => {
-          setIsManageSubredditsModalOpen(false);
-          setCurrentTopicToManage(null);
-        }}
-        topic={currentTopicToManage}
-        onUpdate={handleUpdateTopicSubreddits}
-        isLoading={isLoading}
-      />
+      {currentTopicToManage && (
+        <ManageSubredditsModal
+          isOpen={isManageSubredditsModalOpen}
+          onClose={() => {
+            setIsManageSubredditsModalOpen(false);
+            setCurrentTopicToManage(null);
+          }}
+          topic={currentTopicToManage}
+                onUpdate={handleUpdateTopicSubreddits}
+                isLoading={isLoading}
+              />
+      )}
       
       {/* Auth Modal */}
       <AuthModal
