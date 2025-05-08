@@ -155,7 +155,7 @@ export function TopicCard({
   console.log("topic.subreddit_icons: ", topic.subreddit_icons)
   // Determine how many placeholder icons we need (if any)
   // const placeholdersNeeded = Math.max(0, 4 - displayIcons.length);
-  const maxIcons = 4;
+  // const maxIcons = 4;
   // const placeholdersNeeded = displayIcons.length === 0 ? maxIcons : 
   //                            displayIcons.length < maxIcons ? maxIcons - displayIcons.length : 0;
 
