@@ -318,6 +318,7 @@ export default function Home() {
   
   const handleSignOut = async () => {
     await supabase.auth.signOut()
+    window.location.reload()
   }
   
   const handleAuthSuccess = async () => {
