@@ -46,9 +46,10 @@ export default function RootLayout({
                 {children}
               </main>
             </div>
-            <div className="z-20">
+            {/* Chat sidebar */}
+            {/* <div className="z-20">
               <Chat />
-            </div>
+            </div> */}
           </div>
         </AuthProvider>
       </body>
