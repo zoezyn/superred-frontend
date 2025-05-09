@@ -38,14 +38,20 @@ export async function POST(request: Request) {
       );
     }
 
-    // Call your backend API
+    // Call your backend API with timeout handling
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
+
     const response = await fetch('https://superred-backend-ancient-field-5996.fly.dev/analyze', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(body),
+      signal: controller.signal,
     });
+    
+    clearTimeout(timeoutId);
     
     if (!response.ok) {
       throw new Error(`Backend responded with status: ${response.status}`);
