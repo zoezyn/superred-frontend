@@ -433,10 +433,10 @@ export default function Home() {
       const data: RedditAnalysisResponse = await response.json()
       
       // Create a name for the topic based on the number of subreddits
-      const primarySubredditName = updatedSubreddits[0]
-      const topicTitle = updatedSubreddits.length === 1 
-        ? primarySubredditName
-        : `${primarySubredditName}+${updatedSubreddits.length - 1}`
+      // const primarySubredditName = updatedSubreddits[0]
+      // const topicTitle = updatedSubreddits.length === 1 
+      //   ? primarySubredditName
+      //   : `${primarySubredditName}+${updatedSubreddits.length - 1}`
       
 
               // Merge the new API data with existing data
