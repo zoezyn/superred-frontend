@@ -39,7 +39,6 @@ export default function TopicPage() {
     
     try {
       if (user) {
-        console.log("idididid: ", topicId)
         // Fetch from database if user is logged in
         const { data, error } = await supabase
           .from('topics')
@@ -47,7 +46,6 @@ export default function TopicPage() {
           .eq('id', topicId)
           .eq('user_id', user.id)
           .single()
-        console.log("data#################: ", data)
         
         if (error) {
           console.error('Error fetching topic:', error)
@@ -65,7 +63,6 @@ export default function TopicPage() {
         // Try to get from localStorage as fallback
         if (typeof window !== 'undefined') {
           const savedTopics = localStorage.getItem('topics')
-          // console.log("savedTopics: ", savedTopics)
           if (savedTopics) {
             try {
               const topics = JSON.parse(savedTopics)

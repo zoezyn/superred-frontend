@@ -141,7 +141,6 @@ export function TopicCard({
     ? topic.subreddit_icons.filter((icon: string) => icon && icon !== "") 
     : [];
 
-  console.log("Array.isArray(topic.subreddit_icons): ", Array.isArray(topic.subreddit_icons))
 
   // console.log("subredditIcons: ", subredditIcons)
   
@@ -151,15 +150,12 @@ export function TopicCard({
   //   : postIcons;
 
   // const displayIcons = subredditIcons
-  console.log("displayIcons: ", displayIcons)
-  console.log("topic.subreddit_icons: ", topic.subreddit_icons)
   // Determine how many placeholder icons we need (if any)
   // const placeholdersNeeded = Math.max(0, 4 - displayIcons.length);
   // const maxIcons = 4;
   // const placeholdersNeeded = displayIcons.length === 0 ? maxIcons : 
   //                            displayIcons.length < maxIcons ? maxIcons - displayIcons.length : 0;
 
-  console.log("topicsubreddit111: ", topic)
   
   return (
     <Link href={`/topics/${topic.id}`} className="block relative group">
@@ -490,7 +486,6 @@ export function AddSubredditModal({
   };
   
   const handleConfirm = () => {
-    console.log("selectedSubreddits: ", selectedSubreddits)
     if (selectedSubreddits.length === 0) {
       setSearchError("Please select at least one subreddit");
       return;
@@ -589,7 +584,6 @@ export function AddSubredditModal({
               <div className="space-y-2 max-h-60 overflow-y-auto">
                 <h3 className="text-sm font-medium text-gray-400 mb-2">Select subreddits to analyze:</h3>
                 {searchResults.map((subreddit) => {
-                  console.log("subreddit: ", subreddit)
                   const isSelected = selectedSubreddits.some(sr => sr.name === subreddit.name);
                   return (
                     
@@ -609,7 +603,6 @@ export function AddSubredditModal({
                           />
                           
                           {subreddit.subreddit_icon ? (
-                            console.log("subreddit.subreddit_icon: ", subreddit.subreddit_icon),
                             <img 
                               src={subreddit.subreddit_icon} 
                               alt={`r/${subreddit.display_name} icon`} 
@@ -752,10 +745,8 @@ export function ManageSubredditsModal({
   useEffect(() => {
     if (isOpen && topic) {
       // Get existing subreddits from the topic
-      console.log("topiccc: ", topic)
       const currentSubreddits = topic.subreddit || [];
       setExistingSubreddits(currentSubreddits);
-      console.log("existingSubredditss: ", existingSubreddits)
       
       // Reset other state
       setSelectedSubreddits([]);

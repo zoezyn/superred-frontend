@@ -100,7 +100,7 @@ export default function CompleteProfile() {
     setError("")
     
     try {
-      console.log("Saving profile...", { firstName, lastName, dateOfBirth, career })
+      // console.log("Saving profile...", { firstName, lastName, dateOfBirth, career })
       
       // Insert user profile
       const { error: profileError } = await supabase
@@ -118,7 +118,7 @@ export default function CompleteProfile() {
         throw profileError
       }
       
-      console.log("Profile saved successfully")
+      // console.log("Profile saved successfully")
       
       // TODO: Update user metadata
       // Update user metadata
@@ -128,7 +128,6 @@ export default function CompleteProfile() {
       //     last_name: lastName
       //   }
       // })
-      // console.log("here")
       
       // if (userUpdateError) {
       //   console.error("User update error:", userUpdateError)
@@ -138,7 +137,7 @@ export default function CompleteProfile() {
       // }
       
       setSuccess(true)
-      console.log("Redirecting to home page...")
+      // console.log("Redirecting to home page...")
       
       // Redirect immediately instead of waiting
       router.push("/")

@@ -40,7 +40,6 @@ export default function Home() {
   // Check for existing session on load
   const { user } = useAuth()
 
-  console.log("page-user: ", user)
   // useEffect(() => {
   //   const { data: { subscription } } = supabase.auth.onAuthStateChange(
   //     (_event, session) => {
@@ -70,7 +69,6 @@ export default function Home() {
           
           if (error) throw error
 
-          console.log("datadata: ", data)
           
           if (data) {
             // Transform database format to component format if needed
@@ -160,7 +158,6 @@ export default function Home() {
       }
       
       const data: RedditAnalysisResponse = await response.json()
-      console.log("data: ", data)
       
       // Get a name and icon for the topic (using first subreddit as primary if multiple)
       const primarySubredditName = subredditNames[0];
@@ -168,7 +165,6 @@ export default function Home() {
       
       // Get icon from either the selected subreddits data or from the API response
       let subredditIconUrl = null;
-      console.log("subredditIconUrl1: ", subredditIconUrl)
 
       
       if (selectedSubreddits.length > 0) {
@@ -188,12 +184,10 @@ export default function Home() {
       //   ));
       // }
       
-      console.log("selectedSubreddits: ", selectedSubreddits)
       // else if (data.categories[0]?.posts[0]?.subreddit_icon) {
       //   subredditIconUrl = data.categories[0].posts[0].subreddit_icon;
       // }
       
-      console.log("subredditIconUrl: ", subredditIconUrl)
       
       // Calculate total subscribers across all selected subreddits
       const totalSubscribers = selectedSubreddits.reduce((total, sr) => total + (sr.subscribers || 0), 0);
@@ -241,8 +235,6 @@ export default function Home() {
       //   .eq('user_id', user.id)
       //   .single()
 
-      // console.log("Anydatadatadata1: ", data)
-      console.log("dataNewTopic: ", dataNewTopic)
       
       if (error) throw error
       
@@ -364,36 +356,27 @@ export default function Home() {
       setIsLoading(true)
       
       // Get the current topic
-      console.log("topicshere: ", topics)
-      console.log("topicId: ", topicId)
       const currentTopic = topics.find(topic => topic.id === topicId)
       if (!currentTopic) throw new Error("Topic not found")
-      console.log("currentTopic: ", currentTopic)
       
       // Get current subreddits as an array
       const currentSubreddits = currentTopic.subreddit || []
-      console.log("currentSubreddits: ", currentSubreddits)
-      console.log("subredditsToModify: ", subredditsToModify)
       
       // Separate subreddits to add and remove
       const subredditsToRemove = subredditsToModify
         .filter(sr => sr._toRemove)
         .map(sr => sr.display_name)
 
-      console.log("subredditsToRemove: ", subredditsToRemove)
       
       const subredditsToAdd = subredditsToModify
         .filter(sr => !sr._toRemove)
         .map(sr => sr.display_name)
 
-      console.log("subredditsToAdd: ", subredditsToAdd)
       
       // Create the updated subreddit list
       const updatedSubreddits = currentSubreddits
         .filter((name: string) => !subredditsToRemove.includes(name))
         .concat(subredditsToAdd)
-
-      console.log("updatedSubreddits: ", updatedSubreddits)
       
       // Extract up to 4 subreddit icons from the selected subreddits
       const updatedSubredditIcons = subredditsToModify
@@ -402,8 +385,6 @@ export default function Home() {
         .concat(currentTopic.subreddit_icons || [])
         .filter(icon => icon !== "")
         .slice(0, 4)
-
-      console.log("updatedSubredditIcons: ", updatedSubredditIcons)
 
 
       // Get the current subscribers count
@@ -427,7 +408,6 @@ export default function Home() {
       //   .filter(sr => !sr._toRemove)
       //   .reduce((total, sr) => total + (sr.subscribers || 0), 0)
 
-      // console.log("addedSubscribers: ", addedSubscribers)
       
       // Subtract removed subreddits subscribers if known (might not be accurate)
       // For now, we'll recalculate based on API data
@@ -437,7 +417,6 @@ export default function Home() {
         subreddits: updatedSubreddits,
         search_limit: 50
       }
-      console.log("requestData: ", requestData)
       
       const response = await fetch("/api/analyze", {
         method: "POST",
@@ -470,8 +449,6 @@ export default function Home() {
       //     ...(data.categories || {})
       //   }
       // };
-      console.log("title: ", topicTitle)
-      console.log("subreddit: ", updatedSubreddits)
       // Update the topic in Supabase
       const { error: dbError } = await supabase
         .from('topics')

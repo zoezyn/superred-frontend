@@ -48,7 +48,7 @@ export default function Sidebar() {
 
   const isLoggedIn = Boolean(user && profile)
 
-  console.log("sidebar-isLoggedIn: ", isLoggedIn)
+  // console.log("sidebar-isLoggedIn: ", isLoggedIn)
 
   const mainNavItems = [
     { path: '/', label: 'Dashboard', icon: <LayoutDashboard size={18} /> },

@@ -12,8 +12,6 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     }
-
-    console.log("Search subreddits request:", body);
     
     // Call your backend API
     const response = await fetch('https://superred-backend-ancient-field-5996.fly.dev/search-subreddits', {

@@ -38,7 +38,6 @@ export async function POST(request: Request) {
       );
     }
 
-    console.log("body: ", body)
     // Call your backend API
     const response = await fetch('https://superred-backend-ancient-field-5996.fly.dev/analyze', {
       method: 'POST',
