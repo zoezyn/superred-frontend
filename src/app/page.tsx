@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { TopicCard, AddTopicCard, AddSubredditModal, sampleColors } from "@/components/topic-card"
-import { RedditAnalysisRequest, RedditAnalysisResponse, SubredditInfo as BaseSubredditInfo } from "@/types/reddit"
+import { RedditAnalysisRequest, RedditAnalysisResponse } from "@/types/reddit"
 import { supabase } from "@/lib/supabase"
 import { AuthModal, UserProfile } from "@/components/auth"
 // import { User } from "@supabase/supabase-js"
@@ -10,9 +10,6 @@ import { useAuth } from "@/context/AuthContext"
 import { Topic } from "@/types/tables"
 import { useRouter } from "next/navigation"
 // Extended SubredditInfo type for our UI needs
-interface SubredditInfo extends BaseSubredditInfo {
-  _toRemove?: boolean;
-}
 
 // Default topics data - only used if no user is logged in
 // const defaultTopics = [
@@ -344,7 +341,7 @@ export default function Home() {
   }
 
   // Function to handle opening the manage subreddits modal
-  const handleManageSubreddits = (topicId: string) => {
+  const handleManageSubreddits = () => {
     if (!user) {
       setIsAuthModalOpen(true)
       return
