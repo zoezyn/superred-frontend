@@ -101,6 +101,13 @@ export default function ProfilePage() {
     }
   }
 
+  // At the top with other hooks
+  useEffect(() => {
+    if (user && !profile) {
+      window.location.href = '/complete-profile'
+    }
+  }, [user, profile])
+
   if (loading) {
     return (
       <div className="container mx-auto px-6 py-8">
@@ -122,21 +129,8 @@ export default function ProfilePage() {
         </div>
       </div>
     )
-  } else if (user && !profile) {
-    // Using useEffect for client-side redirect
-    useEffect(() => {
-      window.location.href = '/complete-profile'
-    }, [])
-    
-    return (
-      <div className="container mx-auto px-6 py-8">
-        <div className="text-center">
-          <p>Redirecting to complete your profile...</p>
-          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-brand mx-auto mt-4"></div>
-        </div>
-      </div>
-    )
-  } else {
+  } 
+
     return (
       <div className="container mx-auto px-6 py-8 max-w-2xl">
       <Link href="/dashboard" className="flex items-center text-gray-400 hover:text-white mb-8">
@@ -262,4 +256,3 @@ export default function ProfilePage() {
     </div>
   )
   }
-}
