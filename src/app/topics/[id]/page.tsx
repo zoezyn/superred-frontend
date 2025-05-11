@@ -196,7 +196,9 @@ export default function TopicPage() {
   }
 
   return (
-    <div className="container mx-auto px-6 py-8">
+    <div className="w-full px-2 sm:px-6 py-8 overflow-x-hidden">
+    {/* <div className="container mx-auto px-6 py-8 "> */}
+    {/* <div className="w-full max-w-screen-xl mx-auto px-3 sm:px-6 py-8"> */}
       <Link href="/dashboard" className="flex items-center hover:text-white mb-6">
         <ArrowLeft className="mr-2 h-4 w-4  " />
         <div className={`${topic.color} text-black  font-bold py-1 px-3 text-2xl inline-block `}>
@@ -214,7 +216,8 @@ export default function TopicPage() {
       {topic.apiData ? (
         // <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 ">
         
-          <div className="columns-1 lg:columns-md gap-6 space-y-6 ">
+          <div className="columns-1 lg:columns-2 gap-6 space-y-6 ">
+          {/* <div className="columns-1 md:columns-2 lg:columns-3 gap-4 sm:gap-6 space-y-4 sm:space-y-6"> */}
           {Object.entries(topic.apiData.categories || {}).map(([categoryName, category]: [string, Category]) => (
             <div key={categoryName} className="bg-brand/65 rounded-lg p-2 pt-4 border border-zinc-800 break-inside-avoid">
               <div className="flex items-center justify-between mb-2">
@@ -263,18 +266,18 @@ export default function TopicPage() {
                 
                 <div 
                   className={`overflow-hidden transition-all duration-400 ease-in-out ${
-                    expandedCategories[categoryName] ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'
+                    expandedCategories[categoryName] ? ' opacity-100' : 'max-h-0 opacity-0'
                   }`}
                 >
                   <div className="space-y-4 mt-2">
                     {category.posts && category.posts.map((post: RedditPost, index: number) => (
-                      <div key={index} className="border-l-2 border-brand pl-4 py-1">
-                        <h4 className="font-medium">{post.title}</h4>
-                        <p className="text-gray-400 text-sm mt-1 line-clamp-2">{post.content}</p>
-                        {/* <div className="flex items-center text-xs text-gray-500 mt-2">
-                          <span className="mr-3">Score: {post.score}</span>
-                          <span>Comments: {post.num_comments}</span>
-                        </div> */}
+                      <div key={index} className="border-l-2 border-brand pl-3 py-1 ">
+                        <h4 className="font-medium text-sm break-words">{post.title}</h4>
+                        <div className="w-[200px] sm:w-[300px] md:w-[600px] lg:w-full"> {/* Fixed width container */}
+                          <p className="text-gray-400 text-xs mt-1 line-clamp-2">{post.content}</p>
+                        </div>
+                        {/* <p className="text-gray-400 text-xs mt-1 line-clamp-2 break-words">{post.content}</p> */}
+                        {/* <p className="text-gray-400 text-xs mt-1 line-clamp-2 break-words max-w-full whitespace-normal overflow-wrap-anywhere">{post.content}</p> */}
                         {post.url && (
                           <a 
                             href={post.url} 
