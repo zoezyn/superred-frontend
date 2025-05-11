@@ -1,19 +1,36 @@
 "use client"
 
-// import { useState, useEffect } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { LayoutDashboard, Bookmark } from "lucide-react"
+import { LayoutDashboard, Bookmark, ChevronLeft, ChevronRight } from "lucide-react"
 import { supabase } from "@/lib/supabase"
 import { useAuth } from '@/context/AuthContext'
-import { useEffect, useState } from "react"
 import { UserProfile } from "@/types/tables"
 
 export default function Sidebar() {
   const pathname = usePathname();
-//   const [user, setUser] = useState<User | null>(null)
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const { user } = useAuth()
+  const [isCollapsed, setIsCollapsed] = useState(false)
+
+  // Handle responsive collapse
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth <= 768) {
+        setIsCollapsed(true)
+      }
+    }
+
+    // Set initial state
+    handleResize()
+
+    // Add event listener
+    window.addEventListener('resize', handleResize)
+
+    // Cleanup
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
   const fetchUserProfile = async (userId: string) => {
     try {
@@ -58,36 +75,42 @@ export default function Sidebar() {
   ];
 
   return (
-     
-    <div className="w-[192px] h-full border-r flex flex-col bg-sidebar-bg border-sidebar-border">
-      <div className="p-6">
+    <div className={`h-full border-r flex flex-col bg-sidebar-bg border-sidebar-border transition-all duration-200 ${isCollapsed ? "w-[64px]" : "w-[192px]"}`}>
+      <div className="flex items-center justify-between p-4">
         <Link href="/dashboard">
-          <h1 className="text-2xl font-black font-roboto italic cursor-pointer">
-            <span className="text-brand" >Super</span>
+          <h1 className={`font-black font-roboto italic cursor-pointer transition-all duration-200 text-2xl`}>
+            <span className="text-brand">S</span>
+            {!isCollapsed && <span className="text-brand">uper</span>}
             <br />
-            <span className="text-brand" >Red</span>
+            <span className="text-brand">R</span>
+            {!isCollapsed && <span className="text-brand">ed</span>}
           </h1>
         </Link>
+        <button
+          onClick={() => setIsCollapsed((prev) => !prev)}
+          className="ml-2 p-1 rounded hover:bg-sidebar-item-bg transition"
+          aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+        >
+          {isCollapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
+        </button>
       </div>
       
-      <nav className="flex-1 px-3 py-4">
+      <nav className="flex-1 px-2 py-4">
         <ul className="space-y-1">
           {mainNavItems.map((item) => {
             const isActive = pathname === item.path;
             return (
               <li key={item.path}>
-                <Link 
-                  href={item.path} 
-                  className={`flex items-center p-2 px-4 text-sm rounded-xl transition-colors ${
-                    isActive 
-                      ? 'text-accent  bg-sidebar-item-bg' 
+                <Link
+                  href={item.path}
+                  className={`flex items-center p-2 ${isCollapsed ? "justify-center" : "px-4"} text-sm rounded-xl transition-colors ${
+                    isActive
+                      ? 'text-accent  bg-sidebar-item-bg'
                       : 'text-secondary hover:bg-sidebar-item-bg'
                   }`}
                 >
-                  <span className="mr-3">
-                    {item.icon}
-                  </span>
-                  {item.label}
+                  <span>{item.icon}</span>
+                  {!isCollapsed && <span className="ml-3">{item.label}</span>}
                 </Link>
               </li>
             );
@@ -95,24 +118,26 @@ export default function Sidebar() {
         </ul>
       </nav>
 
-      <div className="px-4 py-3 border-t border-sidebar-border">
+      <div className={`border-t border-sidebar-border ${isCollapsed ? "px-2 py-3" : "px-4 py-3"}`}>
         <Link href="/profile" className="block">
           <div className="flex items-center group cursor-pointer">
             <div className="w-10 h-10 rounded-full flex items-center justify-center text-black font-medium bg-accent">
               {isLoggedIn ? <>{profile?.first_name[0]}{profile?.last_name[0]}</> : ""}
             </div>
-            <div className="ml-3">
-              {isLoggedIn ? 
-                <div>
-                  <p className="text-sm font-medium group-hover:text-white transition-colors">
-                    {profile?.first_name} {profile?.last_name}
-                  </p>
-                  <p className="text-xs text-gray-400">{profile?.career}</p>
-                </div>
-                :
-                <p className="text-sm font-medium text-primary">Username</p>
-              }
-            </div>
+            {!isCollapsed && (
+              <div className="ml-3">
+                {isLoggedIn ?
+                  <div>
+                    <p className="text-sm font-medium group-hover:text-white transition-colors">
+                      {profile?.first_name} {profile?.last_name}
+                    </p>
+                    <p className="text-xs text-gray-400">{profile?.career}</p>
+                  </div>
+                  :
+                  <p className="text-sm font-medium text-primary">Username</p>
+                }
+              </div>
+            )}
           </div>
         </Link>
       </div>
