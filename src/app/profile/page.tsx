@@ -129,8 +129,7 @@ export default function ProfilePage() {
         </div>
       </div>
     )
-  } 
-
+  }  else if (user && profile) {
     return (
       <div className="container mx-auto px-6 py-8 max-w-2xl">
       <Link href="/dashboard" className="flex items-center text-gray-400 hover:text-white mb-8">
@@ -256,3 +255,4 @@ export default function ProfilePage() {
     </div>
   )
   }
+}
