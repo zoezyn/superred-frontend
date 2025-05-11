@@ -51,7 +51,7 @@ export default function Sidebar() {
   // console.log("sidebar-isLoggedIn: ", isLoggedIn)
 
   const mainNavItems = [
-    { path: '/', label: 'Dashboard', icon: <LayoutDashboard size={18} /> },
+    { path: '/dashboard', label: 'Dashboard', icon: <LayoutDashboard size={18} /> },
     { path: '/saved', label: 'Saved', icon: <Bookmark size={18} /> },
     // { path: '/search', label: 'Search', icon: <Search size={20} /> },
     // { path: '/account', label: 'Account', icon: <LucideUser size={18} /> },
@@ -61,7 +61,7 @@ export default function Sidebar() {
      
     <div className="w-[192px] h-full border-r flex flex-col bg-sidebar-bg border-sidebar-border">
       <div className="p-6">
-        <Link href="/">
+        <Link href="/dashboard">
           <h1 className="text-2xl font-black font-roboto italic cursor-pointer">
             <span className="text-brand" >Super</span>
             <br />

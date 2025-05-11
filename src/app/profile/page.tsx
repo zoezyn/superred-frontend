@@ -126,7 +126,7 @@ export default function ProfilePage() {
 
   return (
     <div className="container mx-auto px-6 py-8 max-w-2xl">
-      <Link href="/" className="flex items-center text-gray-400 hover:text-white mb-8">
+      <Link href="/dashboard" className="flex items-center text-gray-400 hover:text-white mb-8">
         <ArrowLeft className="mr-2 h-4 w-4" />
         Back to Dashboard
       </Link>

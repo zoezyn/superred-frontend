@@ -60,7 +60,7 @@ export default function CompleteProfile() {
       
       if (profile) {
         // User already has a profile, redirect to home
-        router.push("/")
+        router.push("/dashboard")
         return
       }
       
@@ -140,7 +140,7 @@ export default function CompleteProfile() {
       // console.log("Redirecting to home page...")
       
       // Redirect immediately instead of waiting
-      router.push("/")
+      router.push("/dashboard")
     } catch (error) {
       console.error("Error saving profile:", error)
       if (error instanceof Error) {

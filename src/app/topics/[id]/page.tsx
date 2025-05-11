@@ -187,7 +187,7 @@ export default function TopicPage() {
       <div className="container mx-auto px-6 py-8">
         <div className="flex flex-col items-center justify-center h-64">
           <h1 className="text-2xl font-bold mb-4">Topic not found</h1>
-          <Link href="/" className="text-brand hover:underline">
+          <Link href="/dashboard" className="text-brand hover:underline">
             Return to home
           </Link>
         </div>
@@ -197,7 +197,7 @@ export default function TopicPage() {
 
   return (
     <div className="container mx-auto px-6 py-8">
-      <Link href="/" className="flex items-center hover:text-white mb-6">
+      <Link href="/dashboard" className="flex items-center hover:text-white mb-6">
         <ArrowLeft className="mr-2 h-4 w-4  " />
         <div className={`${topic.color} text-black  font-bold py-1 px-3 text-2xl inline-block `}>
           {topic.title}

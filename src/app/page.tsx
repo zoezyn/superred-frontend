@@ -8,6 +8,7 @@ import { AuthModal, UserProfile } from "@/components/auth"
 // import { User } from "@supabase/supabase-js"
 import { useAuth } from "@/context/AuthContext"
 import { Topic } from "@/types/tables"
+import { useRouter } from "next/navigation"
 // Extended SubredditInfo type for our UI needs
 interface SubredditInfo extends BaseSubredditInfo {
   _toRemove?: boolean;
@@ -26,6 +27,8 @@ interface SubredditInfo extends BaseSubredditInfo {
 //   },
 // ]
 
+export const maxDuration = 60; 
+
 export default function Home() {
   const [topics, setTopics] = useState<Topic[]>([])
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -39,6 +42,14 @@ export default function Home() {
   const [currentTopicToManage, setCurrentTopicToManage] = useState<Topic | null>(null)
   // Check for existing session on load
   const { user } = useAuth()
+  const router = useRouter();
+
+  useEffect(() => {
+    if (user) {
+      setIsAuthModalOpen(false)
+      router.replace("/dashboard");
+    }
+  }, [user, router])
 
   // useEffect(() => {
   //   const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -542,19 +553,7 @@ export default function Home() {
         error={error}
       />
       
-      {/* Modal for managing subreddits */}
-      {currentTopicToManage && (
-        <ManageSubredditsModal
-          isOpen={isManageSubredditsModalOpen}
-          onClose={() => {
-            setIsManageSubredditsModalOpen(false);
-            setCurrentTopicToManage(null);
-          }}
-          topic={currentTopicToManage}
-                onUpdate={handleUpdateTopicSubreddits}
-                isLoading={isLoading}
-              />
-      )}
+
       
       {/* Auth Modal */}
       <AuthModal
