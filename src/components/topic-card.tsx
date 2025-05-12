@@ -476,9 +476,15 @@ export function AddSubredditModal({
       const isAlreadySelected = prev.some(sr => sr.name === subreddit.name);
       
       if (isAlreadySelected) {
-        // Remove it if already selected
+        // Remove it if already selected and clear error message
+        setSearchError("");
         return prev.filter(sr => sr.name !== subreddit.name);
       } else {
+        // Check max limit before adding
+        if (prev.length >= Number(process.env.NEXT_PUBLIC_MAX_SUBREDDITS_PER_TOPIC)) {
+          setSearchError(`You can select up to ${process.env.NEXT_PUBLIC_MAX_SUBREDDITS_PER_TOPIC} subreddits per topic.`);
+          return prev;
+        }
         // Add it if not selected
         return [...prev, subreddit];
       }
@@ -801,9 +807,20 @@ export function ManageSubredditsModal({
       const isAlreadySelected = prev.some(sr => sr.name === subreddit.name);
       
       if (isAlreadySelected) {
-        // Remove it if already selected
+        // Remove it if already selected and clear error message
+        setSearchError("");
         return prev.filter(sr => sr.name !== subreddit.name);
       } else {
+        // Calculate total subreddits after addition
+        const currentSubredditsCount = existingSubreddits.length;
+        const newSubredditsCount = prev.filter(sr => !sr._toRemove).length;
+        const totalAfterAddition = currentSubredditsCount + newSubredditsCount + 1;
+
+        // Check if adding would exceed the limit
+        if (totalAfterAddition > Number(process.env.NEXT_PUBLIC_MAX_SUBREDDITS_PER_TOPIC)) {
+          setSearchError(`You can have up to ${process.env.NEXT_PUBLIC_MAX_SUBREDDITS_PER_TOPIC} subreddits per topic.`);
+          return prev;
+        }
         // Add it if not selected
         return [...prev, subreddit];
       }

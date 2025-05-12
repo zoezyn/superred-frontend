@@ -102,9 +102,17 @@ export default function Home() {
   const addNewTopic = () => {
     if (!user) {
       setIsAuthModalOpen(true)
-    } else {
-      setIsModalOpen(true)
+      return
     }
+
+    if (topics.length >= Number(process.env.NEXT_PUBLIC_MAX_TOPICS)) {
+      setError(`You have reached the maximum limit of ${process.env.NEXT_PUBLIC_MAX_TOPICS} topics. Please delete some topics to add new ones.`)
+      setIsModalOpen(true)
+      return
+    }
+
+    setError("")
+    setIsModalOpen(true)
   }
 
   // Function to handle form submission
@@ -118,6 +126,11 @@ export default function Home() {
     
     if (!user) {
       setIsAuthModalOpen(true)
+      return
+    }
+
+    if (topics.length >= Number(process.env.NEXT_PUBLIC_MAX_TOPICS)) {
+      setError(`You have reached the maximum limit of ${process.env.NEXT_PUBLIC_MAX_TOPICS} topics. Please delete some topics to add new ones.`)
       return
     }
     
