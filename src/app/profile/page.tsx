@@ -92,21 +92,35 @@ export default function ProfilePage() {
     }
   }
 
+  // const handleSignOut = async () => {
+  //   try {
+  //     await supabase.auth.signOut()
+  //     window.location.href = '/'
+  //   } catch (error) {
+  //     console.error('Error signing out:', error)
+  //   }
+  // }
+
   const handleSignOut = async () => {
     try {
+      // First clear the local session to prevent subsequent requests
       await supabase.auth.signOut()
-      window.location.href = '/'
     } catch (error) {
-      console.error('Error signing out:', error)
+      console.error('Error during sign out:', error)
+    } finally {
+      // Always redirect regardless of logout success or failure
+      window.location.replace('/')
     }
   }
 
   // At the top with other hooks
   useEffect(() => {
-    if (user && !profile) {
+    // Only run this check after loading is complete
+    if (!loading && user && !profile) {
       window.location.href = '/complete-profile'
+
     }
-  }, [user, profile])
+  }, [user, profile, loading])
 
   if (loading) {
     return (
