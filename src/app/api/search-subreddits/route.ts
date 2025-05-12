@@ -14,7 +14,7 @@ export async function POST(request: Request) {
     }
     
     // Call your backend API
-    const response = await fetch('https://superred-backend-ancient-field-5996.fly.dev/search-subreddits', {
+    const response = await fetch(process.env.BACKEND_URL + '/search-subreddits', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

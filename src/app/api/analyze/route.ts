@@ -42,7 +42,7 @@ export async function POST(request: Request) {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
 
-    const response = await fetch('https://superred-backend-ancient-field-5996.fly.dev/analyze', {
+    const response = await fetch(process.env.BACKEND_URL + '/analyze', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
