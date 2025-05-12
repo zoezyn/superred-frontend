@@ -273,7 +273,7 @@ export default function TopicPage() {
                     {category.posts && category.posts.map((post: RedditPost, index: number) => (
                       <div key={index} className="border-l-2 border-brand pl-3 py-1 ">
                         <h4 className="font-medium text-sm break-words">{post.title}</h4>
-                        <div className="w-[200px] sm:w-[300px] md:w-[600px] lg:w-full"> {/* Fixed width container */}
+                        <div className="w-[200px] sm:w-[300px] md:w-[600px] lg:max-w-full"> {/* Fixed width container */}
                           <p className="text-gray-400 text-xs mt-1 line-clamp-2">{post.content}</p>
                         </div>
                         {/* <p className="text-gray-400 text-xs mt-1 line-clamp-2 break-words">{post.content}</p> */}

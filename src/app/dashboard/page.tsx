@@ -337,8 +337,8 @@ export default function Home() {
     try {
       // const { data: { session } } = await supabase.auth.getSession();
       // console.log("session: ", session)
-      localStorage.removeItem(`sb-${process.env.NEXT_PUBLIC_SUPABASE_PROJECT_ID}-auth-token`);
-      localStorage.removeItem(`sb-${process.env.NEXT_PUBLIC_SUPABASE_PROJECT_ID}-refresh-token`);
+      // localStorage.removeItem(`sb-${process.env.NEXT_PUBLIC_SUPABASE_PROJECT_ID}-auth-token`);
+      // localStorage.removeItem(`sb-${process.env.NEXT_PUBLIC_SUPABASE_PROJECT_ID}-refresh-token`);
 
       // if (!session) {
       //   console.log("No active session - skipping server logout");
