@@ -37,6 +37,7 @@ export default function RootLayout({
                 // src="/background.jpg"
                 src="/bg3.svg"
                 alt="City panorama"
+                loading="eager"
                 className="fixed h-full w-full opacity-30 object-cover"
                 // className="fixed inset-0 h-full w-full object-cover opacity-40 grayscale"
               />
