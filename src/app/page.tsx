@@ -148,7 +148,7 @@ export default function Home() {
       
       const requestData: RedditAnalysisRequest = {
         subreddits: subredditNames,
-        search_limit: 50
+        search_limit: Number(process.env.NEXT_PUBLIC_SEARCH_LIMIT)
       }
       
       const response = await fetch("/api/analyze", {
@@ -313,11 +313,17 @@ export default function Home() {
   }
   
   const handleSignOut = async () => {
-    await supabase.auth.signOut()
-    // window.location.reload()
-    window.location.href = '/'
+    try {
+      // First clear the local session to prevent subsequent requests
+      await supabase.auth.signOut()
+    } catch (error) {
+      console.error('Error during sign out:', error)
+    } finally {
+      // Always redirect regardless of logout success or failure
+      window.location.replace('/dashboard')
+    }
   }
-  
+
   const handleAuthSuccess = async () => {
     setIsAuthModalOpen(false)
     

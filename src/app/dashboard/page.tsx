@@ -157,7 +157,7 @@ export default function Home() {
       
       const requestData: RedditAnalysisRequest = {
         subreddits: subredditNames,
-        search_limit: 50
+        search_limit: Number(process.env.NEXT_PUBLIC_SEARCH_LIMIT)
       }
       
       const response = await fetch("/api/analyze", {
@@ -321,12 +321,45 @@ export default function Home() {
     }
   }
   
+  // const handleSignOut = async () => {
+  //   try {
+  //     // First clear the local session to prevent subsequent requests
+  //     await supabase.auth.signOut()
+  //     console.log("Signed out")
+  //   } catch (error) {
+  //     console.error('Error during sign out:', error)
+  //   } finally {
+  //     // Always redirect regardless of logout success or failure
+  //     window.location.replace('/')
+  //   }
+  // }
   const handleSignOut = async () => {
-    await supabase.auth.signOut()
-    // window.location.reload()
-    window.location.href = '/'
+    try {
+      // const { data: { session } } = await supabase.auth.getSession();
+      // console.log("session: ", session)
+      localStorage.removeItem(`sb-${process.env.NEXT_PUBLIC_SUPABASE_PROJECT_ID}-auth-token`);
+      localStorage.removeItem(`sb-${process.env.NEXT_PUBLIC_SUPABASE_PROJECT_ID}-refresh-token`);
+
+      // if (!session) {
+      //   console.log("No active session - skipping server logout");
+      //   // window.location.replace("/");
+      //   return;
+      // } else {
+      //   console.log("Active session - signing out");
+      // }
+
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error('Error during sign out:', error)
+        throw error;
+      }
+    } catch (error) {
+      console.error('Error while signing out', error);
+    } finally {
+      window.location.replace('/')
+    }
   }
-  
+
   const handleAuthSuccess = async () => {
     setIsAuthModalOpen(false)
     
@@ -430,7 +463,7 @@ export default function Home() {
       // Call the Reddit API to analyze the updated subreddits
       const requestData: RedditAnalysisRequest = {
         subreddits: updatedSubreddits,
-        search_limit: 50
+        search_limit: Number(process.env.NEXT_PUBLIC_SEARCH_LIMIT)
       }
       
       const response = await fetch("/api/analyze", {
