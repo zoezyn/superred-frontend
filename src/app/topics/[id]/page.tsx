@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { useParams } from "next/navigation"
 import Link from "next/link"
-import { ArrowLeft, Bookmark } from "lucide-react"
+import { ArrowLeft, Bookmark, ChevronDown, ChevronUp, MessageSquare } from "lucide-react"
 import { supabase } from "@/lib/supabase"
 // import { useAuth } from '@/context/AuthContext'
 import { RedditPost, Category, RedditAnalysisResponse } from "@/types/reddit"
@@ -26,6 +26,7 @@ export default function TopicPage() {
   // const { user } = useAuth()
   const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({})
   const [savedItems, setSavedItems] = useState<Record<string, boolean>>({})
+  const [expandAll, setExpandAll] = useState(false)
 
   // Check for user session
   useEffect(() => {
@@ -208,99 +209,139 @@ export default function TopicPage() {
       </Link>
 
       <div className="mb-4">
-
         {/* <h1 className="text-3xl font-bold">{topic.title} Analysis</h1> */}
         <p className="text-gray-400 ">{topic.members}</p>
       </div>
 
       {topic.apiData ? (
-        // <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 ">
-        
-          <div className="columns-1 lg:columns-2 gap-6 space-y-6 ">
+        <>
+          <div className="flex justify-end mb-4">
+            <button 
+              onClick={() => {
+                const newExpandState = !expandAll;
+                setExpandAll(newExpandState);
+                
+                // Create a new object where all categories have the same expanded state
+                const allCategories: Record<string, boolean> = {};
+                Object.keys(topic.apiData?.categories || {}).forEach(category => {
+                  allCategories[category] = newExpandState;
+                });
+                
+                setExpandedCategories(allCategories);
+              }}
+              className="px-3 py-1 text-sm bg-zinc-700 hover:bg-zinc-600 rounded-md cursor-pointer"
+            >
+              {expandAll ? 'Collapse All' : 'Expand All'}
+            </button>
+          </div>
+          
+          <div className="columns-1 gap-6 space-y-6 max-w-6xl mx-auto">
+            <p className="text-gray-100 text-sm font-md">
+              ALL DISCUSSIONS
+            </p>
           {/* <div className="columns-1 md:columns-2 lg:columns-3 gap-4 sm:gap-6 space-y-4 sm:space-y-6"> */}
           {Object.entries(topic.apiData.categories || {}).map(([categoryName, category]: [string, Category]) => (
-            <div key={categoryName} className="bg-brand/65 rounded-lg p-2 pt-4 border border-zinc-800 break-inside-avoid">
+            <div key={categoryName} className="bg-zinc-900 rounded-lg px-4 py-4 md:px-10 md:py-4 break-inside-avoid border border-zinc-800">
               <div className="flex items-center justify-between mb-2">
-                <p className="text-black text-md font-semibold ml-2">{category.category}</p>
+                <p className="text-white text-lg font-semibold py-4">{category.category}</p>
                 {user && (
                       <button
                         onClick={() => handleBookmark(category.category, category.pain_points)}
-                        className="text-zinc-800 hover:text-white transition-colors"
+                        className="text-white hover:text-brand cursor-pointer transition-colors "
                       >
                         <Bookmark
                           size={20}
-                          className={savedItems[`${category.category}-${category.pain_points}`] ? 'fill-current' : ''}
+                          className={savedItems[`${category.category}-${category.pain_points}`] ? 'text-brand fill-brand' : ''}
                         />
                       </button>
                     )}
               </div>
-              <div key={categoryName} className="bg-zinc-900/95 rounded-lg p-6 border border-zinc-800">
-                <div className="flex items-start justify-between">
+
+              <div className="flex items-center justify-between mb-2 mt-6">
+                <p className="text-gray-100 text-xs font-md">SUMMARY</p>
+              </div>
+              <div key={categoryName} className="bg-zinc-800/95 rounded-lg my-2 mb-8 p-4 border border-zinc-800">
+                <div className="flex items-start justify-between bg ">
                   <p className="mb-4 text-base">{category.pain_points}</p>
-                  {/* {user && (
-                    <button
-                      onClick={() => handleBookmark(categoryName, category.pain_points)}
-                      className="text-gray-400 hover:text-white transition-colors"
-                    >
-                      <Bookmark
-                        size={20}
-                        className={savedItems[`${categoryName}-${category.pain_points}`] ? 'fill-current' : ''}
-                      />
-                    </button>
-                  )} */}
                 </div>
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className={`inline-block py-1 px-3 text-white border border-green-200 rounded-md font-normal`}>
-                    Related Posts
-                  </h3>
+              </div>
+
+                <div className="flex items-center justify-between mb-2 mt-6">
+                  <p className="text-gray-100 text-xs font-md">TOP PICKS</p>
                   <button 
                     onClick={() => {
                       const currentExpanded = expandedCategories[categoryName] || false;
                       setExpandedCategories({...expandedCategories, [categoryName]: !currentExpanded});
                     }}
-                    className="text-gray-400 hover:text-white text-sm transition-colors duration-200 cursor-pointer"
+                    className="text-brand hover:underline text-xs transition-colors duration-200 cursor-pointer"
                   >
-                    {expandedCategories[categoryName] ? 'Hide' : 'Show'}
+                    {expandedCategories[categoryName] ? 'Show Less' : `View all posts (${(category.posts || []).length})`}
                   </button>
                 </div>
+
+                <div className="bg-zinc-800/95 rounded-lg my-2 p-4 border border-zinc-800">
                 
-                <div 
-                  className={`overflow-hidden transition-all duration-400 ease-in-out ${
-                    expandedCategories[categoryName] ? ' opacity-100' : 'max-h-0 opacity-0'
-                  }`}
-                >
-                  <div className="space-y-4 mt-2">
-                    {category.posts && category.posts.map((post: RedditPost, index: number) => (
+                <div className="space-y-4 mt-2">
+                  {(category.posts || [])
+                    .sort((a, b) => (b.score || 0) - (a.score || 0))
+                    .slice(0, expandedCategories[categoryName] ? undefined : 2)
+                    .map((post: RedditPost, index: number) => (
                       <div key={index} className="border-l-2 border-brand pl-3 py-1 ">
                         <h4 className="font-medium text-sm break-words">{post.title}</h4>
-                        <div className="w-[200px] sm:w-[300px] md:w-[600px] lg:max-w-full"> {/* Fixed width container */}
+                        {/* <div className="w-[200px] sm:w-[300px] md:w-[600px] lg:max-w-full"> */}
+                        <div className="w-[300px] sm:w-[430px]  md:w-full">
                           <p className="text-gray-400 text-xs mt-1 line-clamp-2">{post.content}</p>
                         </div>
-                        {/* <p className="text-gray-400 text-xs mt-1 line-clamp-2 break-words">{post.content}</p> */}
-                        {/* <p className="text-gray-400 text-xs mt-1 line-clamp-2 break-words max-w-full whitespace-normal overflow-wrap-anywhere">{post.content}</p> */}
                         {post.url && (
-                          <a 
-                            href={post.url} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="text-brand text-xs hover:underline mt-1 inline-block"
-                          >
-                            View on Reddit
-                          </a>
+                          <div className="flex items-center gap-3 mt-1">
+                            <a 
+                              href={post.url} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="text-brand text-xs hover:underline"
+                            >
+                              View on Reddit
+                            </a>
+                            <span className="text-gray-400 text-xs">↑ Score: {post.score}</span>
+                            <span className="text-gray-400 text-xs flex items-center gap-1">
+                              <MessageSquare size={12} /> {post.num_comments}
+                            </span>
+                          </div>
                         )}
                       </div>
                     ))}
-                  </div>
+                  {/* Bottom show more/less text */}
+                  {expandedCategories[categoryName] ? (
+                    <div 
+                      onClick={() => {
+                        setExpandedCategories({...expandedCategories, [categoryName]: false});
+                      }}
+                      className="text-center text-sm text-brand hover:text-white transition-colors duration-200 cursor-pointer mt-4 flex items-center justify-center gap-1"
+                    >
+                      Show less <ChevronUp size={16} />
+                    </div>
+                  ) : (category.posts || []).length > 2 && (
+                    <div 
+                      onClick={() => {
+                        setExpandedCategories({...expandedCategories, [categoryName]: true});
+                      }}
+                      className="text-center text-xs text-white hover:text-brand transition-colors duration-200 cursor-pointer flex items-center justify-center gap-1"
+                    >
+                      {(category.posts || []).length - 2} more 
+                      <ChevronDown size={16} />
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
           ))}
         </div>
-      ) : (
-        <div className="bg-gray-900 rounded-lg p-6 border border-gray-800">
-          <p className="text-gray-400">No analysis data available for this topic.</p>
-        </div>
-      )}
+      </>
+    ) : (
+      <div className="bg-gray-900 rounded-lg p-6 border border-gray-800">
+        <p className="text-gray-400">No analysis data available for this topic.</p>
+      </div>
+    )}
     </div>
   )
 } 

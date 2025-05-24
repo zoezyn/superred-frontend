@@ -5,6 +5,7 @@ export interface UserProfile {
     last_name: string;
     date_of_birth: string;
     career: string;
+    is_premium?: boolean;
     created_at?: string | null;
     updated_at?: string | null;
   }

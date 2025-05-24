@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { useAuth } from "@/context/AuthContext"
 import { supabase } from "@/lib/supabase"
 import Link from "next/link"
-import { ArrowLeft } from "lucide-react"
+import { ArrowLeft, Check } from "lucide-react"
 import { UserProfile } from "@/types/tables"
 
 export default function ProfilePage() {
@@ -12,6 +12,8 @@ export default function ProfilePage() {
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [loading, setLoading] = useState(true)
   const [isEditing, setIsEditing] = useState(false)
+  const [isPremium, setIsPremium] = useState(false)
+  const [downgradeLoading, setDowngradeLoading] = useState(false)
   const [formData, setFormData] = useState({
     first_name: '',
     last_name: '',
@@ -48,6 +50,7 @@ export default function ProfilePage() {
         if (error) throw error
 
         setProfile(data)
+        setIsPremium(data.is_premium || false)
         setFormData({
           first_name: data.first_name,
           last_name: data.last_name,
@@ -122,6 +125,74 @@ export default function ProfilePage() {
     }
   }, [user, profile, loading])
 
+  const handleCheckout = async () => {
+    try {
+      // Call the API endpoint to create a Stripe checkout session
+      if (!user) return
+      
+      console.log('Starting checkout process for user:', user.id)
+      
+      const response = await fetch(`/api/create-checkout-session?userId=${user.id}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null)
+        console.error('Error response:', response.status, errorData)
+        throw new Error(`Failed to create checkout session: ${response.status} ${response.statusText}`)
+      }
+      
+      const data = await response.json()
+      console.log('Checkout session response:', data)
+      
+      if (data.url) {
+        // Redirect to Stripe Checkout
+        console.log('Redirecting to:', data.url)
+        window.location.href = data.url
+      } else {
+        console.error('Failed to create checkout session, no URL returned')
+      }
+    } catch (error) {
+      console.error('Error initiating checkout:', error)
+      alert('There was an error starting the checkout process. Please try again.')
+    }
+  }
+
+  const handleDowngrade = async () => {
+    if (!user) return
+    
+    try {
+      setDowngradeLoading(true)
+      
+      // Update user profile to free plan status
+      const { error } = await supabase
+        .from('user_profiles')
+        .update({ 
+          is_premium: false,
+          updated_at: new Date().toISOString() 
+        })
+        .eq('id', user.id)
+
+      if (error) {
+        console.error('Error downgrading subscription:', error)
+        alert('There was an error downgrading your subscription. Please try again.')
+        return
+      }
+      
+      // Update local state
+      setIsPremium(false)
+      alert('Your subscription has been downgraded to the free plan.')
+    } catch (error) {
+      console.error('Error downgrading subscription:', error)
+      alert('There was an error downgrading your subscription. Please try again.')
+    } finally {
+      setDowngradeLoading(false)
+    }
+  }
+
   if (loading) {
     return (
       <div className="container mx-auto px-6 py-8">
@@ -145,19 +216,20 @@ export default function ProfilePage() {
     )
   }  else if (user && profile) {
     return (
-      <div className="container mx-auto px-6 py-8 max-w-2xl">
+      <div className="container mx-auto px-6 py-8 ">
       <Link href="/dashboard" className="flex items-center text-gray-400 hover:text-white mb-8">
         <ArrowLeft className="mr-2 h-4 w-4" />
         Back to Dashboard
       </Link>
-
-      <div className="bg-zinc-900/95 rounded-lg p-6 border border-zinc-800">
+      {/* <div > */}
+      <div className="flex gap-6 justify-center lg:flex-row flex-col">
+      <div className="bg-zinc-900/95 rounded-lg p-6 border border-zinc-800 w-full lg:w-xl">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold">Profile</h1>
           {!isEditing && (
             <button
               onClick={() => setIsEditing(true)}
-              className="px-4 py-2 bg-brand text-black text-sm font-medium rounded-md hover:bg-opacity-90"
+              className="px-4 py-2 bg-brand text-black text-sm font-medium rounded-md hover:bg-opacity-90 cursor-pointer hover:bg-brand/80 transition-all duration-300"
             >
               Edit Profile
             </button>
@@ -258,13 +330,109 @@ export default function ProfilePage() {
             <div className="pt-6 mt-6 border-t border-zinc-800">
               <button
                 onClick={handleSignOut}
-                className="text-red-400 hover:text-red-300"
+                className="text-red-400 hover:text-red-300 cursor-pointer"
               >
                 Sign Out
               </button>
             </div>
           </div>
         )}
+      </div>
+
+      {/* Subscription Section */}
+      <div className="bg-zinc-900/95 rounded-lg p-6 border border-zinc-800">
+        <h2 className="text-xl font-bold mb-6">Subscription</h2>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Free Plan */}
+          <div className={`rounded-lg p-5 border ${!isPremium ? 'border-brand bg-zinc-800/50' : 'border-zinc-700'}`}>
+            <div className="flex justify-between items-start mb-4">
+              <div>
+                <h3 className="text-lg font-medium">Free Plan</h3>
+                <p className="text-gray-400 text-sm mt-1">Basic features for personal use</p>
+              </div>
+              {!isPremium && (
+                <span className="bg-brand text-black text-xs font-medium px-2 py-1 rounded">Current</span>
+              )}
+            </div>
+            
+            <p className="text-2xl font-bold mb-4">€0 <span className="text-gray-400 text-sm font-normal">/month</span></p>
+            
+            <ul className="space-y-2 mb-6">
+              <li className="flex items-center text-sm">
+                <Check size={16} className="text-brand mr-2" />
+                <span>Up to 2 topics</span>
+              </li>
+              <li className="flex items-center text-sm">
+                <Check size={16} className="text-brand mr-2" />
+                <span>Analyze 2 subreddits per topic</span>
+              </li>
+              <li className="flex items-center text-sm">
+                <Check size={16} className="text-brand mr-2" />
+                <span>Basic analytics</span>
+              </li>
+            </ul>
+          </div>
+          
+          {/* Premium Plan */}
+          <div className={`rounded-lg p-5 border ${isPremium ? 'border-brand bg-zinc-800/50' : 'border-zinc-700'}`}>
+            <div className="flex justify-between items-start mb-4">
+              <div>
+                <h3 className="text-lg font-medium">Premium Plan</h3>
+                <p className="text-gray-400 text-sm mt-1">Advanced features for power users</p>
+              </div>
+              {isPremium && (
+                <span className="bg-brand text-black text-xs font-medium px-2 py-1 rounded">Current</span>
+              )}
+            </div>
+            
+            <p className="text-2xl font-bold mb-4">€10 <span className="text-gray-400 text-sm font-normal">/month</span></p>
+            
+            <ul className="space-y-2 mb-6">
+              <li className="flex items-center text-sm">
+                <Check size={16} className="text-brand mr-2" />
+                <span>Up to 20 topics</span>
+              </li>
+              <li className="flex items-center text-sm">
+                <Check size={16} className="text-brand mr-2" />
+                <span>Analyze 4 subreddits per topic</span>
+              </li>
+              <li className="flex items-center text-sm">
+                <Check size={16} className="text-brand mr-2" />
+                <span>Advanced analytics and insights</span>
+              </li>
+              <li className="flex items-center text-sm">
+                <Check size={16} className="text-brand mr-2" />
+                <span>Priority support</span>
+              </li>
+            </ul>
+            
+            {!isPremium && (
+              <button
+                onClick={handleCheckout}
+                className="w-full py-2 bg-brand text-black text-sm font-medium rounded-md hover:bg-brand/80 transition-colors transition-all duration-300 cursor-pointer"
+              >
+                Upgrade to Premium
+              </button>
+            )}
+            
+            {isPremium && (
+              <div className="space-y-4">
+                <div className="text-center text-sm text-gray-400 mb-2">
+                  Your premium subscription is active
+                </div>
+                <button
+                  onClick={handleDowngrade}
+                  disabled={downgradeLoading}
+                  className="w-full py-2 bg-transparent border border-red-500 text-red-500 text-sm font-medium rounded-md hover:bg-red-500/10 transition-colors"
+                >
+                  {downgradeLoading ? 'Processing...' : 'Downgrade to Free Plan'}
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
       </div>
     </div>
   )
